@@ -1,0 +1,66 @@
+// Cloudflare live demo: one Worker for the Investigations API, the Support
+// MCP and the SPA (ADR-0048). Runbook: docs/deploy-cloudflare.md.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "support-investigator",
+  "main": "src/cloudflare/worker.ts",
+  // The newest date the pinned workerd runtime supports.
+  "compatibility_date": "2026-10-23",
+  // Required: the API uses node:crypto (createHash, timingSafeEqual,
+  // randomUUID) and Buffer.
+  "compatibility_flags": ["nodejs_compat"],
+  "upload_source_maps": true,
+  "observability": {
+    "enabled": true
+  },
+
+  // The SPA (`pnpm build:web` writes web/dist). Only the API paths run the
+  // Worker first; everything else is an asset, and unknown paths get
+  // index.html (the SPA uses hash routing, ADR-0041).
+  "assets": {
+    "directory": "./web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/investigations", "/investigations/*", "/mcp", "/mcp/*"]
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "support-investigator",
+      // PLACEHOLDER: replace with the id that `wrangler d1 create
+      // support-investigator` prints. Local dev (`pnpm cf:dev`) ignores it.
+      "database_id": "76654fd2-b238-4b4e-8e3a-856414c208e3",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Workers AI: intake proposal, explanation improvement and, after a
+  // workers-ai `kb:refresh`, query embeddings. Remote-only: `wrangler dev`
+  // proxies it to your account, so local runs use LANGUAGE_MODEL_PROVIDER=fake.
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Per-client burst limits (ADR-0048). The binding allows only 10 s or 60 s
+  // periods and counts per Cloudflare location. Keep each limit equal to
+  // WORKER_BURST_LIMITS in src/cloudflare/worker-limits.ts (a test checks).
+  // namespace_id must be unique per limiter within your account.
+  "ratelimits": [
+    { "name": "RL_CREATE", "namespace_id": "4801", "simple": { "limit": 10, "period": 60 } },
+    { "name": "RL_MODEL", "namespace_id": "4802", "simple": { "limit": 3, "period": 60 } },
+    { "name": "RL_WRITES", "namespace_id": "4803", "simple": { "limit": 30, "period": 60 } },
+    { "name": "RL_MCP", "namespace_id": "4804", "simple": { "limit": 60, "period": 60 } }
+  ],
+
+  // Non-secret configuration. Secrets (set with `wrangler secret put`):
+  //   DEMO_KEY         optional; a matching x-demo-key header bypasses limits
+  //   RATE_LIMIT_SALT  required; random salt for the client-address digest
+  "vars": {
+    "LANGUAGE_MODEL_PROVIDER": "workers-ai",
+    "WORKERS_AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "LANGUAGE_ASSISTANCE_TIMEOUT_MS": "4000",
+    // The hard daily bound on model spend, across all clients (D1 counter).
+    "RATE_LIMIT_MODEL_PER_DAY_GLOBAL": "50"
+  }
+}

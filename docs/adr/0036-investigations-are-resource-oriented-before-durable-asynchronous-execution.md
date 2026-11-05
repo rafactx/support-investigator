@@ -1,0 +1,13 @@
+# Investigations are resource-oriented before execution becomes durable and asynchronous
+
+The product contract creates, reads and reviews an Investigation by identity rather than returning an anonymous result from `POST /investigate`. The first portfolio slice introduces that resource contract with synchronous execution and a DynamoDB-backed Investigation Audit Trail and Current Investigation projection. An in-memory repository implements the same port only for local tests. Model-proposed intake remains `awaiting_input` until N2 confirms it; Account Scope always comes from explicit trusted context.
+
+The asynchronous evolution preserves the resource and persistence contracts while replacing the synchronous runner with queued execution: creation returns the identity immediately, an idempotent worker advances Investigation State and clients poll the Current Investigation. Streaming or push may later project the same durable progress but never owns execution lifetime.
+
+## Consequences
+
+The first slice replaces `POST /investigate` with `POST /investigations`, `GET /investigations/:id`, `PATCH /investigations/:id/intake`, `POST /investigations/:id/explanations` and `POST /investigations/:id/reviews`; no compatibility endpoint is retained for the unconsumed prototype contract. The create route accepts an idempotency key; intake, explanation and review writes carry an idempotency identity and expected revision. Exact retries return the already-applied result, while stale conflicting commands fail safely.
+
+The synchronous create/intake routes finish with a deterministic Source Pack explanation already persisted. Bedrock explanation is an explicit, separately budgeted action so the longest path does not combine intake extraction, every operational capability and a second model call behind the HTTP API's fixed timeout. The synchronous slice exposes only `awaiting_input`, `completed` and `failed`; review status is derived separately. Investigation identity, facts, decisions and reviews survive Lambda lifecycle changes, but each initiating request remains open during its bounded synchronous action. List/search is deferred; recovery is by stable resource URL or saved identity.
+
+A later runner migration adds SQS and an idempotent worker without changing the domain identity, DynamoDB model or review contract. At that point browser disconnects do not cancel work, retries cannot duplicate facts or decisions, and user-visible progress consists of bounded operational phases rather than model tokens or chain of thought. Workflow-level checkpointing or Step Functions remains deferred until a bounded worker execution no longer meets observed duration or recovery needs.

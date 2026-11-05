@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `pnpm cf:dev` (gitignored). Workers AI is remote-only,
+# so local runs use the fake provider: no network, no model calls.
+LANGUAGE_MODEL_PROVIDER=fake
+RATE_LIMIT_SALT=local-dev-salt
+# DEMO_KEY=local-demo-key

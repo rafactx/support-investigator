@@ -1,0 +1,3 @@
+# Deploy live to a real AWS account for demos, not IaC-only
+
+Infrastructure that only synths proves less than a service that has actually been deployed and operated. We decided to run `cdk deploy` against a real AWS account for demo windows. The deployment sits behind API Gateway with a shared-secret header (no public Lambda Function URL), uses least-privilege IAM, and has a `cdk destroy` runbook that tears the stack down outside the demo window. The alternatives were keeping the project local-dev-only or synth-only. A live URL is a stronger signal than a `cdk synth` printout, and the guardrails keep the cost and exposure window small. This is now the *reference AWS deployment*; a public, always-on demo has different needs (ADR-0047).

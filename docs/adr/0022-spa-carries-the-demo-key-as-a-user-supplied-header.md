@@ -1,0 +1,5 @@
+# The SPA sends the demo key as a user-supplied header, never bundled in
+
+Deploying the SPA for real (`ADR-0021`) surfaced a gap nobody had exercised yet: the SPA was built and tested before the deploy ever put `/investigate` behind the demo key, so nothing had ever driven the real UI against the real, authorizer-protected API. Doing that for the first time after deploying the SPA hit an immediate `401` — `submitInvestigation` never sent `x-demo-key` at all.
+
+Baking the key into the built bundle at `vite build` time the way `VITE_API_URL` is set was rejected outright: a CloudFront-served JS bundle is public by construction, and shipping a shared secret inside it defeats the entire reason the header exists (`ADR-0002`, `ADR-0009`, `ADR-0016`'s pattern of keeping it in SSM SecureString and reading it server-side only). Instead, `submitInvestigation` takes `demoKey` as a per-request parameter, and the SPA collects it from a form field, persisted to `localStorage` so a demo doesn't require retyping it before every ticket. The local-dev path (`vite`'s proxy, `ADR-0014`) isn't gated at all, so an empty key there is the correct default, not an error.

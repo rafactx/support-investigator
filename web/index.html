@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A read-only AI support investigator for e-commerce fulfillment tickets." />
+    <meta name="color-scheme" content="light dark" />
+    <title>Support Investigator</title>
+    <script>
+      // ADR-0024: apply the persisted (or OS-preferred) theme before first
+      // paint, so the dark token set (`index.css`) never flashes light.
+      // React (`App.tsx`'s theme effect) only mirrors this afterwards;
+      // keep the storage key in sync with THEME_STORAGE_KEY there.
+      var theme;
+      try {
+        theme = localStorage.getItem('support-investigator-theme');
+        if (theme !== 'dark' && theme !== 'light') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      } catch {
+        // Storage blocked (private mode): fall back to the OS preference.
+        document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

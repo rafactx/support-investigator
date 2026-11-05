@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    // "node" is required for `tsc --noEmit` to resolve `node:crypto`'s
+    // module declaration in `../src/api/investigations-app.ts` and
+    // `../src/domain/fulfillment-playbook.ts` — both reachable from this
+    // workspace only via `import type` (`investigations-api-client.ts`),
+    // but `tsc` still type-checks every file the module graph reaches,
+    // type-only or not. This adds no Node globals to the built bundle;
+    // Vite never bundles anything from this `types` array.
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

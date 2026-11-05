@@ -1,0 +1,15 @@
+{
+  // Typechecks the Cloudflare Worker and its workerd tests against the
+  // Workers runtime types (`pnpm typecheck` runs both configs).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-plugin/types", "node"]
+  },
+  "include": [
+    "src/cloudflare/worker.ts",
+    "src/cloudflare/**/*.workers.test.ts",
+    "src/cloudflare/test/**/*.ts"
+  ],
+  "exclude": []
+}
