@@ -18,7 +18,7 @@
     "cdk": "cdk --app \"node --env-file-if-exists=.env --experimental-strip-types infra/main.ts\"",
     "cf:dev": "pnpm build:web && wrangler d1 migrations apply support-investigator --local && wrangler dev",
     "cf:migrate": "wrangler d1 migrations apply support-investigator --remote",
-    "cf:check": "pnpm build:web && wrangler deploy --dry-run --outdir dist/worker",
+    "cf:check": "wrangler deploy --dry-run --outdir dist/worker",
     "cf:deploy": "pnpm build:web && wrangler deploy"
   },
   "dependencies": {

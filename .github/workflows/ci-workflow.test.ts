@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { describe, expect, it } from 'vitest';
 
-// Guards the CI contract described in CONTRIBUTING.md and ADR-0017: one
+// Guards the CI contract described in CONTRIBUTING.md and ADR-0049: one
 // required job, the full local command list, no live-model evals, no deploys.
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -42,7 +42,7 @@ function allSteps(workflow: Workflow): WorkflowStep[] {
 }
 
 // pnpm built-ins, not package.json scripts.
-const PNPM_BUILTINS = new Set(['install', 'add', 'remove', 'i']);
+const PNPM_BUILTINS = new Set(['install']);
 
 // Every `pnpm <script>` a step invokes, e.g. "pnpm cdk synth" -> "cdk".
 function pnpmScriptsInvoked(steps: WorkflowStep[]): string[] {
@@ -57,7 +57,7 @@ function pnpmScriptsInvoked(steps: WorkflowStep[]): string[] {
 describe('CI workflow', () => {
   const ci = loadWorkflow('ci.yml');
 
-  it('runs on pull_request, and the gate job runs typecheck, lint, unit tests, pnpm evals:intake, cdk synth and the Worker bundle check', () => {
+  it('runs on pull_request, and the ci job runs typecheck, lint, the SPA build, unit tests, pnpm evals:intake, cdk synth and the Worker bundle check', () => {
     expect(onKeys(ci)).toContain('pull_request');
 
     const runCommands = allSteps(ci)
@@ -66,11 +66,22 @@ describe('CI workflow', () => {
       .join('\n');
 
     expect(runCommands).toMatch(/pnpm (run )?typecheck/);
+    expect(runCommands).toMatch(/pnpm (run )?build:web/);
     expect(runCommands).toMatch(/pnpm (run )?lint/);
     expect(runCommands).toMatch(/pnpm (run )?test/);
     expect(runCommands).toMatch(/pnpm evals:intake(?!:live)/); // "pnpm evals:intake", not "pnpm evals:intake:live"
     expect(runCommands).toMatch(/pnpm cdk synth/);
     expect(runCommands).toMatch(/pnpm cf:check/);
+  });
+
+  it('builds the SPA before every step that reads web/dist', () => {
+    const scripts = pnpmScriptsInvoked(allSteps(ci));
+    const buildIndex = scripts.indexOf('build:web');
+
+    expect(buildIndex).toBeGreaterThanOrEqual(0);
+    for (const reader of ['test', 'cdk', 'cf:check']) {
+      expect(scripts.indexOf(reader)).toBeGreaterThan(buildIndex);
+    }
   });
 
   it('never runs the live-model eval', () => {
@@ -87,7 +98,7 @@ describe('CI workflow', () => {
     expect(ci.jobs.ci?.name).toBe('ci');
   });
 
-  it('the gate workflow never deploys and triggers on nothing but push/pull_request', () => {
+  it('the ci workflow never deploys and triggers on nothing but push/pull_request', () => {
     // Deploys stay manual CLI steps (ADR-0017).
     const ciRunCommands = allSteps(ci)
       .map((step) => step.run)
@@ -110,7 +121,7 @@ describe('CI workflow', () => {
     expect(() => loadWorkflow(badgeWorkflowFile)).not.toThrow();
   });
 
-  it('every pnpm <script> the gate workflow invokes is a real package.json script', () => {
+  it('every pnpm <script> the ci workflow invokes is a real package.json script', () => {
     const packageJson = JSON.parse(readFileSync(`${REPO_ROOT}package.json`, 'utf-8')) as {
       scripts: Record<string, string>;
     };

@@ -8,7 +8,8 @@ You need a Cloudflare account (the Workers Free plan is enough), Node.js 22+ and
 
 ```bash
 pnpm install
-pnpm cf:check        # builds web/dist, then `wrangler deploy --dry-run --outdir dist/worker`
+pnpm build:web       # the Worker serves web/dist as static assets
+pnpm cf:check        # wrangler deploy --dry-run --outdir dist/worker
 ```
 
 This needs no login. It prints the bindings and the upload size; the Worker is about 2 MiB raw, 350 KiB gzipped, well under the 3 MiB Free-plan limit.

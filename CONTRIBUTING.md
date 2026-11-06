@@ -24,7 +24,7 @@ pnpm cdk synth
 pnpm cf:check
 ```
 
-`pnpm build:web` has to run before `pnpm test` and `pnpm cdk synth`, because the CDK stack stages `web/dist` as an asset.
+`pnpm build:web` has to run before `pnpm test`, `pnpm cdk synth` and `pnpm cf:check`: the CDK stack stages `web/dist` as an asset, and the Worker serves it as static assets.
 
 ## Changes
 
