@@ -93,7 +93,7 @@ export function describeInvestigationRepositoryContract(makeRepository: MakeInve
     expect(await repository.getCurrentInvestigation(unique('does-not-exist'))).toBeUndefined();
   });
 
-  it('findByIdempotencyKey reports not-found before any create (AC5 pre-check seam)', async () => {
+  it('findByIdempotencyKey reports not-found before any create (the pre-check seam)', async () => {
     const repository = await makeRepository();
     expect(await repository.findByIdempotencyKey(unique('key'), 'fp-1')).toEqual({ kind: 'not-found' });
   });
@@ -132,7 +132,7 @@ export function describeInvestigationRepositoryContract(makeRepository: MakeInve
     expect((await repository.getCurrentInvestigation(investigationId))?.revision).toBe(1);
   });
 
-  it('reusing a key with a different payload is a structured conflict, not a silent overwrite (AC5)', async () => {
+  it('reusing a key with a different payload is a structured conflict, not a silent overwrite', async () => {
     const repository = await makeRepository();
     const investigationId = unique('inv');
     const otherInvestigationId = unique('inv');
@@ -497,7 +497,7 @@ export function describeInvestigationRepositoryContract(makeRepository: MakeInve
       expect(result).toEqual({ kind: 'not-found' });
     });
 
-    it('appends an event, revision incremented by one, without touching the automated outcome (AC3)', async () => {
+    it('appends an event, revision incremented by one, without touching the automated outcome', async () => {
       const { repository, investigationId } = await seedCompleted();
       const before = await repository.getCurrentInvestigation(investigationId);
 
@@ -520,7 +520,7 @@ export function describeInvestigationRepositoryContract(makeRepository: MakeInve
       expect(fetched?.reviews).toEqual([confirmedReview]);
     });
 
-    it('a second review appends rather than replaces the first (AC3: previous reviews remain immutable and visible)', async () => {
+    it('a second review appends rather than replaces the first (previous reviews remain immutable and visible)', async () => {
       const { repository, investigationId } = await seedCompleted();
       await repository.appendReview({
         investigationId,

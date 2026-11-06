@@ -97,7 +97,7 @@ export function InvestigationIntakeConfirmation({
    * already held, or filling a gap) is an explicit correction/completion;
    * an untouched, already-proposed field the user checked "confirm" for
    * is submitted only in `confirm`, so its `source` stays `'model'`
-   * server-side (AC4) — only its `confirmed` flag flips.
+   * server-side — only its `confirmed` flag flips.
    */
   function explicitValue(field: ConfirmableField): string | undefined {
     if (confirmedFields.has(field)) return undefined;

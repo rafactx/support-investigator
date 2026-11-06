@@ -7,7 +7,7 @@ import {
 } from './bedrock-language-assistance.ts';
 
 describe('buildIntakeExtractionSchema', () => {
-  it('never contains an accountId (or any account-scope) key, structurally — not filtered after the fact (AC2)', () => {
+  it('never contains an accountId (or any account-scope) key, structurally — not filtered after the fact', () => {
     const schema = buildIntakeExtractionSchema(['skuId', 'seller', 'quantity', 'destinationPostalCode']);
     const shape = schema.shape as Record<string, unknown>;
 
@@ -72,7 +72,7 @@ describe('createBedrockLanguageAssistance', () => {
     });
   });
 
-  it('degrades to unavailable rather than throwing when the model call fails (AC7)', async () => {
+  it('degrades to unavailable rather than throwing when the model call fails', async () => {
     const model = mockModel(async () => {
       throw new Error('ThrottlingException: rate exceeded');
     });
@@ -144,7 +144,7 @@ describe('createBedrockLanguageAssistance', () => {
       expect(capturedSystemPrompt).toContain(request.sourcePackUrls[0]);
     });
 
-    it('degrades to unavailable rather than throwing when the model call fails (AC7)', async () => {
+    it('degrades to unavailable rather than throwing when the model call fails', async () => {
       const model = mockModel(async () => {
         throw new Error('ThrottlingException: rate exceeded');
       });

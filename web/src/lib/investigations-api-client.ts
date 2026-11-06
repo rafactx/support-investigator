@@ -38,7 +38,7 @@ export class InvestigationsApiError extends Error {
  * What the intake form collects: ticket text, explicit
  * structured intake, or both. `accountId` stays required in this form —
  * Account Scope always comes from explicit trusted context, never from
- * `ticketText` (AC2) — while the other structured fields are optional:
+ * `ticketText` — while the other structured fields are optional:
  * leaving one blank lets Language Assistance propose it from `ticketText`
  * instead, subject to N2 confirmation via `patchIntake`.
  */
@@ -100,10 +100,10 @@ async function readErrorMessage(response: { json(): Promise<unknown> }, fallback
 }
 
 /**
- * `POST /investigations` (AC1): sends confirmed structured intake plus a
+ * `POST /investigations`: sends confirmed structured intake plus a
  * client-generated `Idempotency-Key`, so a double form submit (a slow
  * network retry, a second click) replays the original Investigation
- * instead of creating a duplicate (AC5). A 409 conflict means the same
+ * instead of creating a duplicate. A 409 conflict means the same
  * key was already used for different field values — practically
  * unreachable from this form (a fresh key is minted per submit attempt,
  * see `investigation-intake-form.tsx`), but still surfaced as a real error
@@ -144,7 +144,7 @@ export async function createInvestigation(
   return (await response.json()) as InvestigationResponse;
 }
 
-/** `GET /investigations/:id` (AC2/AC6): the resource URL the hash route re-fetches on load and refresh. */
+/** `GET /investigations/:id`: the resource URL the hash route re-fetches on load and refresh. */
 export async function getInvestigation(
   baseUrl: string,
   id: string,

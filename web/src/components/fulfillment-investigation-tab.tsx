@@ -92,7 +92,7 @@ export function FulfillmentInvestigationTab({
     try {
       // A fresh key per submit attempt: this is a new create, not a retry
       // of a prior one, so it must never collide with an earlier submit's
-      // key (AC5's replay/conflict behavior is for retries of the *same*
+      // key (replay/conflict behavior is for retries of the *same*
       // attempt, e.g. a network retry — see `createInvestigation`'s own doc).
       const investigation = await createInvestigation(
         baseUrl,

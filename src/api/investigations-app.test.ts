@@ -38,7 +38,7 @@ const VALID_REQUEST = {
 };
 
 // Every raw field name a capability parses out of a raw provider payload
-// and deliberately discards before building its Ledger Fact — AC7's
+// and deliberately discards before building its Ledger Fact. The
 // detector fails loudly if a future change spreads a raw payload into a
 // fact or an error body instead of normalizing it.
 const RAW_PROVIDER_FIELD_NAMES = [
@@ -236,7 +236,7 @@ function postReview(
 }
 
 describe('POST /investigations', () => {
-  it('creates a completed investigation with DESTINATION_NOT_COVERED when the full route is satisfied (AC1/AC2)', async () => {
+  it('creates a completed investigation with DESTINATION_NOT_COVERED when the full route is satisfied', async () => {
     const { app } = buildApp();
 
     const res = await post(app, VALID_REQUEST, 'key-1');
@@ -259,7 +259,7 @@ describe('POST /investigations', () => {
     expect((body.explanation as Record<string, unknown>).summary).toBeTruthy();
   });
 
-  it('runs Operational Capabilities directly, never through this app’s own MCP endpoint (AC3: no mcpClient in deps)', async () => {
+  it('runs Operational Capabilities directly, never through this app’s own MCP endpoint (no mcpClient in deps)', async () => {
     const { app, capabilities } = buildApp();
     await post(app, VALID_REQUEST, 'key-1');
     expect(capabilities.inventory.observe).toHaveBeenCalledTimes(1);
@@ -367,7 +367,7 @@ describe('POST /investigations', () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain('merchant data');
   });
 
-  describe('idempotency (AC5)', () => {
+  describe('idempotency', () => {
     it('an exact retry (same key, same payload) returns the original investigation without re-running capabilities', async () => {
       const { app, capabilities } = buildApp();
       const first = await post(app, VALID_REQUEST, 'key-1');
@@ -403,7 +403,7 @@ describe('POST /investigations', () => {
     });
   });
 
-  describe('AC7: no raw provider payload or ticket text anywhere in the response', () => {
+  describe('no raw provider payload or ticket text anywhere in the response', () => {
     it('the satisfied-contract response carries only normalized fields', async () => {
       const { app } = buildApp();
       const res = await post(app, VALID_REQUEST, 'key-1');
@@ -468,7 +468,7 @@ describe('POST /investigations: ticket text and partial intake', () => {
     expect(res.status).toBe(400);
   });
 
-  it('creates awaiting_input when ticketText is given without accountScope, and never invokes capabilities (AC2/AC3)', async () => {
+  it('creates awaiting_input when ticketText is given without accountScope, and never invokes capabilities', async () => {
     const languageAssistance = createFakeLanguageAssistance(
       fixedFieldsScript({ skuId: 'SKU-2002', seller: '1', quantity: 1, destinationPostalCode: '01310-100' }),
     );
@@ -492,7 +492,7 @@ describe('POST /investigations: ticket text and partial intake', () => {
     expect(capabilities.inventory.observe).not.toHaveBeenCalled();
   });
 
-  it('stays awaiting_input even when Language Assistance proposes every remaining field — a proposal alone never resumes the playbook (AC4)', async () => {
+  it('stays awaiting_input even when Language Assistance proposes every remaining field — a proposal alone never resumes the playbook', async () => {
     const languageAssistance = createFakeLanguageAssistance(
       fixedFieldsScript({ skuId: 'SKU-2002', seller: '1', quantity: 1, destinationPostalCode: '01310-100' }),
     );
@@ -521,7 +521,7 @@ describe('POST /investigations: ticket text and partial intake', () => {
     expect(capabilities.inventory.observe).not.toHaveBeenCalled();
   });
 
-  it('explicit structured values always take precedence over a Language Assistance proposal for the same field (AC1)', async () => {
+  it('explicit structured values always take precedence over a Language Assistance proposal for the same field', async () => {
     const languageAssistance = createFakeLanguageAssistance(fixedFieldsScript({ skuId: 'SKU-WRONG' }));
     const { app } = buildApp({}, languageAssistance);
 
@@ -539,7 +539,7 @@ describe('POST /investigations: ticket text and partial intake', () => {
     expect(body.intake.skuId).toEqual({ value: 'SKU-2002', source: 'user', confirmed: true });
   });
 
-  it('falls back to awaiting_input, not an error, when Language Assistance is unavailable (AC7)', async () => {
+  it('falls back to awaiting_input, not an error, when Language Assistance is unavailable', async () => {
     const { app, capabilities } = buildApp({}, createFakeLanguageAssistance(unavailableScript('Bedrock outage')));
 
     const res = await post(
@@ -600,7 +600,7 @@ describe('PATCH /investigations/:id/intake', () => {
     expect(res.status).toBe(400);
   });
 
-  it('completing every remaining field resumes the investigation synchronously to completed (AC4)', async () => {
+  it('completing every remaining field resumes the investigation synchronously to completed', async () => {
     const { app, capabilities, id, revision } = await seedAwaitingInvestigation();
 
     const res = await patchIntake(
@@ -727,7 +727,7 @@ describe('PATCH /investigations/:id/intake', () => {
 });
 
 describe('POST /investigations/:id/explanations', () => {
-  it('accepts a grounded improvement and keeps it alongside — not instead of — the deterministic explanation (AC4)', async () => {
+  it('accepts a grounded improvement and keeps it alongside — not instead of — the deterministic explanation', async () => {
     const { app, explanationScript } = buildAppWithExplanationScript(groundedImprovementScript());
     const seeded = await seedCompleted(app);
 
@@ -747,7 +747,7 @@ describe('POST /investigations/:id/explanations', () => {
     expect(explanationScript).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects a fabricated identifier/off-pack citation while preserving the deterministic explanation, Evidence Ledger, Finding and Decision unchanged (AC5)', async () => {
+  it('rejects a fabricated identifier/off-pack citation while preserving the deterministic explanation, Evidence Ledger, Finding and Decision unchanged', async () => {
     const { app, explanationScript } = buildAppWithExplanationScript(fabricatedIdentifierImprovementScript());
     const seeded = await seedCompleted(app);
     const before = await app.request(`/investigations/${seeded.id}`);
@@ -776,7 +776,7 @@ describe('POST /investigations/:id/explanations', () => {
     expectNoRawProviderFields(body);
   });
 
-  it('returns 503 and commits nothing when Language Assistance is unavailable, so a fresh attempt at the same revision calls the model again (AC7)', async () => {
+  it('returns 503 and commits nothing when Language Assistance is unavailable, so a fresh attempt at the same revision calls the model again', async () => {
     const { app, explanationScript } = buildAppWithExplanationScript(explanationUnavailableScript('Bedrock outage'));
     const seeded = await seedCompleted(app);
 
@@ -796,7 +796,7 @@ describe('POST /investigations/:id/explanations', () => {
     expect(explanationScript).toHaveBeenCalledTimes(2);
   });
 
-  it('is available only for a completed Investigation and never calls the model for one still awaiting input (AC1)', async () => {
+  it('is available only for a completed Investigation and never calls the model for one still awaiting input', async () => {
     const { app, explanationScript } = buildAppWithExplanationScript(groundedImprovementScript());
     const created = await post(
       app,
@@ -812,7 +812,7 @@ describe('POST /investigations/:id/explanations', () => {
     expect(explanationScript).not.toHaveBeenCalled();
   });
 
-  it('rejects a stale revision before ever calling the model (AC2)', async () => {
+  it('rejects a stale revision before ever calling the model', async () => {
     const { app, explanationScript } = buildAppWithExplanationScript(groundedImprovementScript());
     const seeded = await seedCompleted(app);
 
@@ -851,7 +851,7 @@ describe('POST /investigations/:id/explanations', () => {
     expect(body.error.issues?.length).toBeGreaterThan(0);
   });
 
-  describe('idempotency (AC2)', () => {
+  describe('idempotency', () => {
     it('an exact retry (same key, same body) replays the original response without a second model call', async () => {
       const { app, explanationScript } = buildAppWithExplanationScript(groundedImprovementScript());
       const seeded = await seedCompleted(app);
@@ -891,7 +891,7 @@ describe('POST /investigations/:id/explanations', () => {
     });
   });
 
-  it('GET /investigations/:id never calls the model and never generates or mutates an explanation improvement (AC6)', async () => {
+  it('GET /investigations/:id never calls the model and never generates or mutates an explanation improvement', async () => {
     const { app, explanationScript } = buildAppWithExplanationScript(groundedImprovementScript());
     const seeded = await seedCompleted(app);
 
@@ -943,7 +943,7 @@ describe('POST /investigations/:id/reviews', () => {
     finding: { code: string } | null;
   };
 
-  it('confirmed: appends a review, exposes it verbatim, and leaves the automated finding untouched (AC1/AC3)', async () => {
+  it('confirmed: appends a review, exposes it verbatim, and leaves the automated finding untouched', async () => {
     const { app } = buildApp();
     const seeded = await seedCompleted(app);
 
@@ -973,7 +973,7 @@ describe('POST /investigations/:id/reviews', () => {
     expect(body.finding?.code).toBe('DESTINATION_NOT_COVERED');
   });
 
-  it('corrected: records the corrected code as the Reviewed Finding while finding.code stays the automated code (AC1/AC3/AC5)', async () => {
+  it('corrected: records the corrected code as the Reviewed Finding while finding.code stays the automated code', async () => {
     const { app } = buildApp();
     const seeded = await seedCompleted(app);
 
@@ -999,9 +999,9 @@ describe('POST /investigations/:id/reviews', () => {
       correctedFindingCode: 'ROOT_CAUSE_UNDETERMINED',
       reason: 'conflicting_evidence',
     });
-    // The automated Finding is never rewritten by a correction (AC3).
+    // The automated Finding is never rewritten by a correction.
     expect(body.finding?.code).toBe('DESTINATION_NOT_COVERED');
-    // Only the corrected code is eligible for the future CX Intelligence Loop (AC5).
+    // Only the corrected code is eligible for the future CX Intelligence Loop.
     expect(body.reviewedFinding).toEqual({
       code: 'ROOT_CAUSE_UNDETERMINED',
       outcome: 'corrected',
@@ -1009,7 +1009,7 @@ describe('POST /investigations/:id/reviews', () => {
     });
   });
 
-  it('inconclusive: records the canonical reason and optional note, and is not eligible for the CX Intelligence Loop (AC1/AC5)', async () => {
+  it('inconclusive: records the canonical reason and optional note, and is not eligible for the CX Intelligence Loop', async () => {
     const { app } = buildApp();
     const seeded = await seedCompleted(app);
 
@@ -1038,7 +1038,7 @@ describe('POST /investigations/:id/reviews', () => {
     expect(body.finding?.code).toBe('DESTINATION_NOT_COVERED');
   });
 
-  it('a cause outside the playbook has no corrected shape to hold it — only inconclusive with outside_supported_playbook (AC2)', async () => {
+  it('a cause outside the playbook has no corrected shape to hold it — only inconclusive with outside_supported_playbook', async () => {
     const { app } = buildApp();
     const seeded = await seedCompleted(app);
 
@@ -1061,7 +1061,7 @@ describe('POST /investigations/:id/reviews', () => {
     expect(body.reviewedFinding).toBeNull();
   });
 
-  it('rejects a correctedFindingCode outside the supported taxonomy with a structured 400 (AC2)', async () => {
+  it('rejects a correctedFindingCode outside the supported taxonomy with a structured 400', async () => {
     const { app } = buildApp();
     const seeded = await seedCompleted(app);
 
@@ -1116,7 +1116,7 @@ describe('POST /investigations/:id/reviews', () => {
     expect(res.status).toBe(400);
   });
 
-  it('is available only for a completed Investigation (AC1)', async () => {
+  it('is available only for a completed Investigation', async () => {
     const { app } = buildApp();
     const created = await post(
       app,
@@ -1175,7 +1175,7 @@ describe('POST /investigations/:id/reviews', () => {
     expect(res.status).toBe(400);
   });
 
-  it('a second review appends rather than replaces the first — history is preserved (AC3)', async () => {
+  it('a second review appends rather than replaces the first — history is preserved', async () => {
     const { app } = buildApp();
     const seeded = await seedCompleted(app);
 
@@ -1214,7 +1214,7 @@ describe('POST /investigations/:id/reviews', () => {
     });
   });
 
-  describe('idempotency (AC4)', () => {
+  describe('idempotency', () => {
     it('an exact retry (same key, same body) replays the applied review without appending a second one', async () => {
       const { app } = buildApp();
       const seeded = await seedCompleted(app);

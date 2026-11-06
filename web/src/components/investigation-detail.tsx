@@ -272,7 +272,7 @@ function ReviewHistoryItem({ review }: { review: Review }) {
  *
  * `onSubmitReview` is the same shape of explicit operator
  * action, offered only for a `completed` Investigation: appending a review
- * never rewrites `finding.code` above (AC3) — only `reviewedFinding` and
+ * never rewrites `finding.code` above — only `reviewedFinding` and
  * the append-only history below it change.
  */
 export function InvestigationDetail({
@@ -361,7 +361,7 @@ export function InvestigationDetail({
               // yet confirmed, corrected or marked inconclusive" — once the
               // latest review is inconclusive, it no longer fits that
               // definition, even though it's still ineligible for the CX
-              // Intelligence Loop (AC5).
+              // Intelligence Loop.
               <Badge tone="warning">
                 <CircleDashed aria-hidden="true" />
                 Inconclusive review

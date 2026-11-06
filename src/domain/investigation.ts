@@ -190,16 +190,15 @@ export type ReviewReason =
  * requires it to differ from the automated one, only that it stays within
  * the taxonomy. An unsupported diagnosis has no `corrected` shape to hold
  * it, so a reviewer with a cause outside the playbook has only
- * `inconclusive` with `outside_supported_playbook` available (AC2 is
- * enforced structurally by this union, not by extra cross-field
- * validation); `inconclusive` records
+ * `inconclusive` with `outside_supported_playbook` available (enforced
+ * by this union, not by cross-field validation); `inconclusive` records
  * that no supported Finding could be confirmed and always carries a
  * canonical `reason`. `automatedFindingCode` is captured from
  * `InvestigationOutcome.findingCode` at the moment this review is
  * appended — not re-read from the Investigation later — so a subsequent
  * intake correction that reruns the playbook can never
  * retroactively change what an already-appended review is understood to
- * have evaluated (AC3: "the automated Finding and previous reviews remain
+ * have evaluated ("the automated Finding and previous reviews remain
  * immutable").
  */
 export type HumanReview =

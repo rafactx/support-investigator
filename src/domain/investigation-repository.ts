@@ -87,8 +87,8 @@ export type RequestExplanationImprovementResult =
  * `POST /investigations/:id/reviews`'s write command: appends
  * exactly one Human Review to an already-`completed` Investigation. Like `RequestExplanationImprovementCommand`, this never
  * carries `intake`, `state` or `outcome` — appending a review changes none
- * of those (AC3's "the automated Finding and previous reviews remain
- * immutable").
+ * of those (the automated Finding and earlier reviews stay
+ * immutable).
  */
 export interface AppendReviewCommand {
   readonly investigationId: string;
@@ -112,7 +112,7 @@ export type AppendReviewResult =
  * Investigation is a projection over that history, never a second
  * independently-mutated record. `findByIdempotencyKey` is a read-only
  * pre-check callers use *before* running the Fulfillment Playbook, so an
- * exact retry never re-invokes Operational Capabilities (AC5); `create`
+ * exact retry never re-invokes Operational Capabilities; `create`
  * performs the same check again atomically at commit time as the
  * authoritative guard.
  *

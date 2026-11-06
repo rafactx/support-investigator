@@ -69,7 +69,7 @@ function satisfiedFacts(): LedgerFact[] {
 }
 
 describe('confirmedUserIntake', () => {
-  it('marks every field source: user, confirmed: true (AC1: only confirmed structured values)', () => {
+  it('marks every field source: user, confirmed: true (only confirmed structured values)', () => {
     const intake = confirmedUserIntake({
       accountId: 'account-17',
       skuId: 'SKU-2002',
@@ -113,13 +113,13 @@ describe('evaluateIntakeReadiness', () => {
     });
   });
 
-  it('reports a missing gap when a required field is entirely absent (AC3)', () => {
+  it('reports a missing gap when a required field is entirely absent', () => {
     const intake: FulfillmentIntake = { ...READY_INTAKE, seller: undefined };
     const readiness = evaluateIntakeReadiness('inv-1', intake);
     expect(readiness).toEqual({ kind: 'awaiting_input', gaps: [{ field: 'seller', reason: 'missing' }] });
   });
 
-  it('reports an unconfirmed gap for a model-proposed field N2 has not confirmed (AC4)', () => {
+  it('reports an unconfirmed gap for a model-proposed field N2 has not confirmed', () => {
     const intake: FulfillmentIntake = { ...READY_INTAKE, skuId: modelProposed('SKU-2002') };
     const readiness = evaluateIntakeReadiness('inv-1', intake);
     expect(readiness).toEqual({ kind: 'awaiting_input', gaps: [{ field: 'skuId', reason: 'unconfirmed' }] });
@@ -199,7 +199,7 @@ describe('foldInvestigationEvents', () => {
     expect(foldInvestigationEvents([])).toBeUndefined();
   });
 
-  it('reconstructs the Current Investigation projection from a hand-built event array (ADR-0034 AC4)', () => {
+  it('reconstructs the Current Investigation projection from a hand-built event array', () => {
     const intake = confirmedUserIntake({
       accountId: 'account-17',
       skuId: 'SKU-2002',
@@ -495,7 +495,7 @@ describe('foldInvestigationEvents', () => {
       ];
     }
 
-    it('appends a review without touching outcome, intake or state (AC3)', () => {
+    it('appends a review without touching outcome, intake or state', () => {
       const created = completedEvents();
       const before = foldInvestigationEvents(created);
       const review: InvestigationEvent = {
@@ -519,7 +519,7 @@ describe('foldInvestigationEvents', () => {
       expect(after?.state).toBe(before?.state);
     });
 
-    it('a second review appends rather than replaces the first (AC3: previous reviews remain immutable and visible)', () => {
+    it('a second review appends rather than replaces the first (previous reviews remain immutable and visible)', () => {
       const created = completedEvents();
       const first: InvestigationEvent = {
         kind: 'review_appended',

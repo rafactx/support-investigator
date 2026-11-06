@@ -46,7 +46,7 @@ describe('createFakeLanguageAssistance', () => {
     expect(result).toEqual({ kind: 'extracted', fields: { skuId: 'SKU-2002' } });
   });
 
-  it('can script an invented identifier absent from the ticket text, for AC8 invented-identifier-rate tests', async () => {
+  it('can script an invented identifier absent from the ticket text, for invented-identifier-rate tests', async () => {
     const languageAssistance = createFakeLanguageAssistance(fixedFieldsScript({ skuId: 'SKU-INVENTED-999' }));
 
     const result = await languageAssistance.extractIntake({
@@ -58,7 +58,7 @@ describe('createFakeLanguageAssistance', () => {
     expect(result.kind === 'extracted' && result.fields.skuId).toBe('SKU-INVENTED-999');
   });
 
-  it('unavailableScript reports Language Assistance as unavailable regardless of the request (AC7)', async () => {
+  it('unavailableScript reports Language Assistance as unavailable regardless of the request', async () => {
     const languageAssistance = createFakeLanguageAssistance(unavailableScript('Bedrock outage'));
 
     const result = await languageAssistance.extractIntake({
@@ -89,7 +89,7 @@ describe('createFakeLanguageAssistance', () => {
     });
   });
 
-  it('explanationUnavailableScript reports explanation improvement as unavailable regardless of the request (AC7)', async () => {
+  it('explanationUnavailableScript reports explanation improvement as unavailable regardless of the request', async () => {
     const languageAssistance = createFakeLanguageAssistance(
       fixedFieldsScript({}),
       explanationUnavailableScript('Bedrock outage'),
@@ -100,7 +100,7 @@ describe('createFakeLanguageAssistance', () => {
     expect(result).toEqual({ kind: 'unavailable', reason: 'Bedrock outage' });
   });
 
-  it('fabricatedIdentifierImprovementScript proposes an off-pack citation, for AC5 rejection tests', async () => {
+  it('fabricatedIdentifierImprovementScript proposes an off-pack citation, for rejection tests', async () => {
     const languageAssistance = createFakeLanguageAssistance(
       fixedFieldsScript({}),
       fabricatedIdentifierImprovementScript(),

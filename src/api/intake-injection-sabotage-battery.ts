@@ -71,7 +71,7 @@ export async function assertTicketInjectionCannotFabricateOrAutoConfirm(
   if (intake.accountScope !== undefined) {
     throw new Error(
       'sabotage battery: ticket text injection populated Account Scope — it must come only from ' +
-        'explicit trusted context, never from ticket text or a model proposal (AC2)',
+        'explicit trusted context, never from ticket text or a model proposal',
     );
   }
 
@@ -80,13 +80,13 @@ export async function assertTicketInjectionCannotFabricateOrAutoConfirm(
     if (value?.confirmed) {
       throw new Error(
         `sabotage battery: ticket text injection auto-confirmed "${field}" — a model-proposed field ` +
-          'must never be pre-confirmed, only N2 confirmation can do that (AC4/AC9)',
+          'must never be pre-confirmed, only N2 confirmation can do that',
       );
     }
     if (value && value.source !== 'model') {
       throw new Error(
         `sabotage battery: ticket text injection produced "source: '${value.source}'" for "${field}" — ` +
-          "an extracted field's source must always be 'model' (AC9)",
+          "an extracted field's source must always be 'model'",
       );
     }
   }

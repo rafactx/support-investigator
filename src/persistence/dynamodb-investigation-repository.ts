@@ -102,8 +102,8 @@ export function readInvestigationTableName(env: NodeJS.ProcessEnv = process.env)
  * zero-padded sort key. `getCurrentInvestigation` prefers the materialized
  * `CURRENT` item on the normal path (see `readProjection`); this full scan
  * exists for the commit path (which must fold in the event about to be
- * appended) and for AC6's "reconstructed from immutable historical events
- * and matches the materialized projection" cross-check.
+ * appended) and for the cross-check that the events fold into the materialized
+ * projection.
  */
 async function queryEvents(
   doc: DynamoDBDocumentClient,
@@ -129,7 +129,7 @@ async function queryEvents(
         // seeing a write this same request chain just made (or another
         // request just committed), never a stale replica — a stale read
         // here can misroute a genuine exact retry into
-        // `idempotency-conflict` (AC4).
+        // `idempotency-conflict`.
         ConsistentRead: true,
       }),
     );

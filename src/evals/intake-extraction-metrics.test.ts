@@ -86,7 +86,7 @@ describe('runIntakeExtractionEval', () => {
     expect(report.allProposalsUnconfirmed).toBe(true);
   });
 
-  it('a suite entirely served by unavailableScript reports zero proposals across every field (AC7)', async () => {
+  it('a suite entirely served by unavailableScript reports zero proposals across every field', async () => {
     const unavailable = createFakeLanguageAssistance(unavailableScript());
     const report = await runIntakeExtractionEval(INTAKE_GOLDEN_TICKETS, unavailable);
     expect(report.results.every((r) => r.unavailable)).toBe(true);

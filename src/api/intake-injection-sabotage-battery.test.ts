@@ -83,7 +83,7 @@ function post(app: ReturnType<typeof createInvestigationsApp>, body: unknown, id
   });
 }
 
-describe('end-to-end: adversarial ticket text through the real API (AC9)', () => {
+describe('end-to-end: adversarial ticket text through the real API', () => {
   it('never populates or confirms Account Scope from ticket text, even with a compromised extractor', async () => {
     const deps: InvestigationsDeps = {
       capabilities: buildKnownCapabilities(),

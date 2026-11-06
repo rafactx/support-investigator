@@ -62,7 +62,7 @@ export function fixedFieldsScript(fields: ExtractedIntakeFields): FakeExtraction
   };
 }
 
-/** Reports Language Assistance as unavailable regardless of the request — for AC7's "usable when Bedrock is unavailable" tests. */
+/** Reports Language Assistance as unavailable regardless of the request — for degraded-mode tests. */
 export function unavailableScript(reason = 'Language Assistance is unavailable'): FakeExtractionScript {
   return () => ({ kind: 'unavailable', reason });
 }
@@ -84,7 +84,7 @@ export function groundedImprovementScript(
   });
 }
 
-/** Reports explanation improvement as unavailable regardless of the request — for AC7's "Bedrock failure" tests. */
+/** Reports explanation improvement as unavailable regardless of the request — for model-failure tests. */
 export function explanationUnavailableScript(reason = 'Language Assistance is unavailable'): FakeExplanationScript {
   return () => ({ kind: 'unavailable', reason });
 }
