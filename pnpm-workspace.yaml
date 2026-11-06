@@ -8,3 +8,8 @@ allowBuilds:
   esbuild: true
   workerd: true
   core-js-pure: false
+
+# @xenova/transformers 2.x pins sharp 0.32, which has a high-severity advisory
+# fixed in 0.35.5. Only its text pipeline is used here, which does not call sharp.
+overrides:
+  "@xenova/transformers>sharp": ^0.35.5
