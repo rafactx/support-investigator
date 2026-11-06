@@ -56,12 +56,7 @@ const FIELD_SCHEMAS: Record<ExtractableIntakeField, z.ZodTypeAny> = {
   destinationPostalCode: z.string().min(1),
 };
 
-/**
- * Builds a Zod object schema scoped to exactly the requested fields.
- * Account Scope has no key here to strip — it structurally cannot appear
- * in a model proposal, rather than being filtered out of one after the
- * fact .
- */
+/** Only the requested fields. Account Scope has no key, so a proposal cannot contain it. */
 export function buildIntakeExtractionSchema(
   fields: readonly ExtractableIntakeField[],
 ) {
@@ -181,25 +176,16 @@ infer, guess or fabricate an identifier. Copy identifiers exactly as written. Us
 field the ticket text does not state, or is ambiguous about. You have no access to and must never propose an account,
 merchant or customer identity — that is supplied separately and is outside your task.`;
 
-/**
- * Bounded to one short paragraph plus at most a handful of citations
- * ("at most one bounded model call per accepted command") —
- * this is a rewrite of an already-correct deterministic explanation, not
- * open-ended generation.
- */
+/** A rewrite of an already-correct explanation, so the output is one short paragraph. */
 const ExplanationImprovementSchema = z.strictObject({
   summaryTemplate: z.string().min(1).max(1200),
   citedSourceUrls: z.array(z.string().min(1)).min(1).max(5),
 });
 
 /**
- * Every instruction here exists to make fabrication structurally
- * impossible rather than merely discouraged : the model
- * is never given a real identifier to retype, only placeholder *names* it
- * must wrap in `{{ }}` to reference, and only a fixed list of citable
- * URLs. `domain/explanation-improvement.ts`'s `checkExplanationGrounding`
- * still re-verifies both constraints deterministically after this call —
- * this prompt is instruction, not enforcement.
+ * The model gets placeholder names instead of identifiers and a fixed list of
+ * citable URLs. The prompt is instruction only; `checkExplanationGrounding`
+ * enforces both rules afterwards.
  */
 function buildExplanationImprovementSystemPrompt(
   request: ExplanationImprovementRequest,
@@ -228,14 +214,10 @@ list above.`;
 }
 
 /**
- * Provider-agnostic Language Assistance (ADR-0039/0040): a single bounded
- * `generateText` call with schema-constrained structured output — never an
- * agent loop, never a tool call. Raw ticket text is used only as this
- * call's prompt and is never written anywhere durable by this function.
- * Provider modules (`createBedrockLanguageAssistance`,
- * `createWorkersAiLanguageAssistance`) only choose the `LanguageModel` and
- * may raise the timeout; every prompt, schema, default timeout and token
- * ceiling lives here, so the providers cannot drift apart.
+ * Language Assistance over any AI SDK `LanguageModel`: one bounded
+ * `generateText` call with structured output, no agent loop, no tools. Ticket
+ * text is used only as the prompt. Provider modules pick the model and may
+ * raise the timeout; prompts, schemas and limits live here.
  */
 export function createModelLanguageAssistance(
   resolvedModel: LanguageModel,
