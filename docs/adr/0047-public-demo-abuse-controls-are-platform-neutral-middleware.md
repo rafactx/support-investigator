@@ -1,3 +1,7 @@
+---
+status: accepted, amended by ADR-0048
+---
+
 # Public-demo abuse controls are platform-neutral middleware; deterministic investigation needs no key
 
 A public demo has to let a reviewer try the full flow in one click, and it has to stop strangers from spending the model budget. The reference AWS deployment solves only the second problem: every route sits behind a shared `x-demo-key` (ADR-0019, ADR-0022). That also blocks the deterministic path, even though it costs nothing to run.

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The SPA reaches a Current Investigation through a hash route, not a path route
 
 `GET /investigations/:id` (ADR-0036) needs a stable, refresh-survivable browser URL, and Vite's dev proxy (ADR-0014) already forwards any request whose path starts with `/investigate` to the local Agent API on `:8787` — proxy keys are matched as string prefixes, so that single existing entry already swallows `/investigations` too. If the SPA's own browser path were `/investigations/:id`, a hard refresh or direct load would hit that proxy and receive the API's JSON instead of falling through to `index.html`, defeating the resource URL's whole purpose before the deployed CloudFront SPA fallback (`support-investigator-stack.ts`'s 403/404 → `index.html` rewrite) is even reached.

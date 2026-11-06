@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The SPA explains itself in an in-app onboarding drawer, not a route or a modal
 
 A first-time visitor, such as a reviewer, would otherwise land on a bare intake form with no context: what the five capabilities check, why a model proposal must be confirmed, what each Investigation Decision means. This ADR records the container and content decisions; `web/src/lib/onboarding-content.tsx` is the single source for the copy.

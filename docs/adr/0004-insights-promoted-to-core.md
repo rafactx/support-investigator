@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0046
+---
+
 # Recurring-pattern insights promoted from bonus to core scope
 
 Turning recurring patterns into structured insights for Product and Engineering is a distinct support-engineering responsibility — the part that most signals systemic thinking, not just resolving one ticket at a time. The original plan filed this as a roadmap bonus with no assigned phase, which under [[0001-full-vertical-slice-scope]]'s rule (nothing exists outside the demo or architecture story, but nothing central to the role gets cut either) made it wishlist rather than scope. `pnpm insights` is promoted to a first-class roadmap phase, kept deliberately small: it aggregates over the structured `InvestigationResult` data the evals and golden tickets already produce (diagnosis, status, citations) rather than building new ML or analytics infrastructure.

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # `KnowledgeIndex` pins its own embed provider; `search_support_knowledge` always queries with it, never with the ambient `EMBED_PROVIDER`
 
 > **Scope after the focused-slice decisions:** this remains valid for the optional documentary search capability. The Knowledge Index is not on the Finding decision path and does not select the normative Finding Source Pack; a retrieval result cannot become a Ledger Fact or satisfy an Evidence Contract.

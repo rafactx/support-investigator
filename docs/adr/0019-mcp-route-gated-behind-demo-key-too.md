@@ -1,3 +1,7 @@
+---
+status: accepted, amended by ADR-0046
+---
+
 # The deployed `/mcp` route is gated behind the demo key, not left open
 
 An independent code review (run against the deployed stack, not by whoever wrote it) found the original reasoning for leaving `/mcp` unauthenticated was wrong: it argued gating the route would force the Agent Lambda's own role to read the demo key, which the deploy requirement ("no broader policy") forbade — but that requirement constrains IAM permissions, not what headers an outbound HTTP request carries, so that was never actually a blocker. In practice, the route was a real, live, unauthenticated trigger for a billable Bedrock Titan Embeddings call reachable by anyone with the URL (`ADR-0016` already documents one such call happening). `/mcp` now sits behind the same demo-key `HttpLambdaAuthorizer` as `/investigate`; the Agent Lambda gets one narrowly-scoped `ssm:GetParameter` + `kms:Decrypt` grant (its own `iam.Policy`, kept separate from the Bedrock policy the stack test inspects) so its own `McpClient` calls can attach the header, and `createLambdaDeps` (`src/api/lambda-handler.ts`) fetches that key via `src/security/read-demo-key.ts` — the same helper the authorizer itself uses, extracted so the logic isn't duplicated. The "third-party MCP client" use case is unaffected: it's satisfied by a third party running their own Support MCP Lambda from this repo, or being handed this deployment's key out of band — it never required this specific demo instance to sit open to the whole internet.

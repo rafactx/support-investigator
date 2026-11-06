@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Official product insights require human-reviewed findings
 
 The Support Investigator may surface automated findings immediately, including findings whose evidence gate reports high confidence, but the CX Intelligence Loop will treat them as Unreviewed Signals until N2 confirms or corrects them. Only Reviewed Findings can support an official Product Insight for Product or Engineering. We accept slower insight coverage in exchange for preventing model or policy-gate errors from becoming authoritative organizational trends.

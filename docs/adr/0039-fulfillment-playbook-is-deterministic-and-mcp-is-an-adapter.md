@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The Fulfillment Playbook is deterministic and MCP is an adapter
 
 The first-party Fulfillment Playbook executes every required Operational Capability in a deterministic, evidence-driven order and evaluates the resulting ledger through the Finding Policy. AI is limited to language-heavy edges such as extracting ambiguous inputs, retrieving optional explanatory knowledge and drafting a grounded explanation or next action; it cannot skip mandatory checks or assign findings and decisions. The first-party runner calls the capability module directly, while Support MCP is an adapter exposing the same capabilities to independent consumers rather than an internal network hop back into the product.

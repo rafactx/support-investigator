@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0039
+---
+
 # Support MCP's Streamable HTTP transport: fresh `McpServer` + `StreamableHTTPServerTransport` per HTTP request, not one long-lived pair
 
 > **Status: superseded for the target architecture by ADR-0039.** This remains the record of the correct workaround for the implemented MCP TypeScript SDK v1 prototype. The focused slice migrates to the v2 server and Hono packages, whose `createMcpHandler` owns the per-request stateless Web Standard transport lifecycle.

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Finding Policy assigns codes from call-bound evidence
 
 The deterministic Fulfillment Playbook chooses and sequences every mandatory investigation capability; the model may only propose intake values and draft an explanation. The final Finding Code is assigned by a deterministic Finding Policy. Each supported code has an Evidence Contract evaluated against an Evidence Ledger whose facts are constructed from actual capability results and remain tied to their individual calls. Missing, failed or contradictory evidence cannot be repaired by model prose; it yields `ROOT_CAUSE_UNDETERMINED` or escalation instead.

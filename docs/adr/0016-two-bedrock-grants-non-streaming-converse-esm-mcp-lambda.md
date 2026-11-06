@@ -1,3 +1,7 @@
+---
+status: accepted, amended by ADR-0046
+---
+
 # Two separate `bedrock:InvokeModel` grants, `stream: false` on the Bedrock provider, ESM-only for the Support MCP Lambda, and a region-dropping env bug in `search_support_knowledge` — four deploy-time facts the first live `cdk deploy` surfaced that no prior ADR anticipated
 
 Building the CDK stack + real AWS deploy inherited three already-written, uncommitted artifacts from an earlier pass: `infra/demo-key-authorizer.ts`, `infra/support-investigator-stack.test.ts`, and `src/mcp/lambda-handler.ts`. The stack implementation itself (`infra/support-investigator-stack.ts`) and the CDK app entrypoint (`infra/main.ts`) didn't exist yet — writing them, then actually running `cdk deploy` against the target account (redacted — see `infra/main.ts`, `CDK_ACCOUNT_ID`; `us-east-2`) rather than stopping at a clean `cdk synth`, surfaced three facts none of the project spec, ADR-0002, or the pre-written stack test anticipated.

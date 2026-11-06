@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # CI gate is the same 5 local commands, in one job; introducing Biome for `lint`; no GitHub Actions deploy workflow added
 
 The CI requirements named `typecheck`, `lint`, unit tests, `pnpm evals`, and `cdk synth` as the required PR gate. Two things needed a decision that no prior ADR covers: what `lint` actually runs (no lint tool was installed anywhere in the repo before this change), and whether the requirements' `workflow_dispatch` parenthetical means building a GitHub Actions deploy workflow that didn't exist before either.

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The SPA sends the demo key as a user-supplied header, never bundled in
 
 Deploying the SPA for real (`ADR-0021`) surfaced a gap nobody had exercised yet: the SPA was built and tested before the deploy ever put `/investigate` behind the demo key, so nothing had ever driven the real UI against the real, authorizer-protected API. Doing that for the first time after deploying the SPA hit an immediate `401` — `submitInvestigation` never sent `x-demo-key` at all.

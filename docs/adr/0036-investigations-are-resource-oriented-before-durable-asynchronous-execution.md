@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Investigations are resource-oriented before execution becomes durable and asynchronous
 
 The product contract creates, reads and reviews an Investigation by identity rather than returning an anonymous result from `POST /investigate`. The first portfolio slice introduces that resource contract with synchronous execution and a DynamoDB-backed Investigation Audit Trail and Current Investigation projection. An in-memory repository implements the same port only for local tests. Model-proposed intake remains `awaiting_input` until N2 confirms it; Account Scope always comes from explicit trusted context.

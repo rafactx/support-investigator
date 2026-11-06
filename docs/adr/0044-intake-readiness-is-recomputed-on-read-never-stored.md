@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Intake readiness (and its gaps) is recomputed on every read, never persisted as its own field
 
 `awaiting_input` (ADR-0036's vocabulary, first implemented with intake from ticket text) needs to answer two related questions on every `GET /investigations/:id`: is this Investigation ready for the Fulfillment Playbook, and if not, which fields are missing or unconfirmed and why. The event-sourced write side (`investigation_created`/`intake_updated`, ADR-0034) already has one authoritative fact per Investigation — its current `FulfillmentIntake` — and `evaluateIntakeReadiness(investigationId, intake)` (`src/domain/investigation.ts`) is a pure, total function from that intake to either a ready `ConfirmedFulfillmentIntake` or a list of `IntakeGap`s.

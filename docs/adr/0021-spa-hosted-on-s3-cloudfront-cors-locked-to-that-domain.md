@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The SPA deploys to S3 + CloudFront; the API's CORS is locked to that domain
 
 `ADR-0016` deferred this exact configuration, since nothing had scoped S3/CloudFront and there was no CloudFront domain yet to lock CORS to. An independent code review named the resulting gap directly: the evidence-timeline SPA was never deployed anywhere, so the demo requirements (a live AWS URL to open during the demo, and an audience that watches the investigation unfold) only held for the API, not the UI — the live demo's UI portion was reduced to a raw `curl` call.

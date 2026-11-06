@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Cut over to the resource-oriented Investigation, remove Strands and the golden-ticket harness
 
 The original prototype and the resource-oriented Investigation had coexisted since the latter was introduced: `POST /investigate` (Strands `Agent` → `McpClient` → this app's own Support MCP endpoint → free-text `InvestigationResult`, gated by a global confidence score) sat alongside `POST /investigations` (deterministic Fulfillment Playbook → typed Evidence Ledger → pure Finding Policy → canonical Finding Code and Investigation Decision). This cutover ends that coexistence with no compatibility layer: the resource-oriented Investigation is now the only first-party investigation workflow the API, CLI and web app expose.
