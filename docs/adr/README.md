@@ -20,13 +20,13 @@ One file per decision, numbered in the order the decisions were made. Superseded
 | [0014](./0014-spa-dev-proxy-not-backend-cors.md) | Local-dev SPA reaches the Agent API through Vite's dev proxy, not backend CORS headers | accepted |
 | [0015](./0015-insights-reads-persisted-eval-reports-from-disk.md) | `pnpm insights` reads persisted `final`-only eval reports from disk, gitignored, no dedupe across sources | superseded by ADR-0046 |
 | [0016](./0016-two-bedrock-grants-non-streaming-converse-esm-mcp-lambda.md) | Two separate `bedrock:InvokeModel` grants, `stream: false` on the Bedrock provider, ESM-only for the Support MCP Lambda, and a region-dropping env bug in `search_support_knowledge` — four deploy-time facts the first live `cdk deploy` surfaced that no prior ADR anticipated | accepted, amended by ADR-0046 |
-| [0017](./0017-ci-gate-is-the-local-command-list-in-one-job-deploy-stays-cli-only.md) | CI gate is the same 5 local commands, in one job; introducing Biome for `lint`; no GitHub Actions deploy workflow added | accepted |
+| [0017](./0017-ci-gate-is-the-local-command-list-in-one-job-deploy-stays-cli-only.md) | CI gate is the local command list in one job; Biome for `lint`; no GitHub Actions deploy workflow | accepted, amended by ADR-0049 |
 | [0018](./0018-model-provider-glm-wired-in-at-the-cli-seam-only.md) | `MODEL_PROVIDER=glm` wired into `createModel`, scoped to the CLI seam only — the deployed stack stays Bedrock-only | superseded by ADR-0046 |
 | [0019](./0019-mcp-route-gated-behind-demo-key-too.md) | The deployed `/mcp` route is gated behind the demo key, not left open | accepted, amended by ADR-0046 |
 | [0020](./0020-policy-gate-verifies-evidence-against-real-tool-activity.md) | The policy gate's evidence is verified against real tool activity, not taken on the model's word | superseded by ADR-0031 |
 | [0021](./0021-spa-hosted-on-s3-cloudfront-cors-locked-to-that-domain.md) | The SPA deploys to S3 + CloudFront; the API's CORS is locked to that domain | accepted |
 | [0022](./0022-spa-carries-the-demo-key-as-a-user-supplied-header.md) | The SPA sends the demo key as a user-supplied header, never bundled in | accepted |
-| [0023](./0023-spa-composes-a-design-system-not-a-custom-shell.md) | The SPA composes a design system's real primitives, not a hand-rolled shell | superseded — the SPA was rebuilt on Tailwind CSS v4 and Radix primitives |
+| [0023](./0023-spa-composes-a-design-system-not-a-custom-shell.md) | The SPA composes a design system's real primitives, not a hand-rolled shell | superseded by ADR-0050 |
 | [0024](./0024-spa-dark-mode-via-token-overrides.md) | The SPA's dark mode is a token-override layer, not per-component rules | accepted |
 | [0025](./0025-onboarding-drawer-explains-the-project-in-app.md) | The SPA explains itself in an in-app onboarding drawer, not a route or a modal | accepted |
 | [0026](./0026-focused-fulfillment-investigation-as-the-first-scalable-slice.md) | Fulfillment investigation is the first bounded slice; scale comes from additional investigation kinds | accepted |
@@ -52,3 +52,5 @@ One file per decision, numbered in the order the decisions were made. Superseded
 | [0046](./0046-cut-over-to-resource-oriented-investigation-and-remove-strands.md) | Cut over to the resource-oriented Investigation, remove Strands and the golden-ticket harness | accepted |
 | [0047](./0047-public-demo-abuse-controls-are-platform-neutral-middleware.md) | Public-demo abuse controls are platform-neutral middleware; deterministic investigation needs no key | accepted, amended by ADR-0048 |
 | [0048](./0048-cloudflare-workers-is-the-live-demo-target-with-workers-ai.md) | The live demo runs on one Cloudflare Worker with Workers AI; AWS CDK stays the reference deployment | accepted |
+| [0049](./0049-ci-is-one-required-ci-job-with-the-worker-bundle-check.md) | CI is one required `ci` job that also checks the Worker bundle | accepted |
+| [0050](./0050-spa-is-built-on-tailwind-css-and-radix-primitives.md) | The SPA is built on Tailwind CSS v4 and Radix primitives | accepted |
