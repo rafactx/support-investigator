@@ -92,9 +92,9 @@ export function OnboardingDrawer({
                   'platform credentials needed by default. A fixture gateway answers every call (ADR-0005).',
               },
               {
-                figure: 'AWS',
+                figure: '1',
                 label:
-                  'Deployed for real, not just infrastructure-as-code that synths cleanly.',
+                  'Cloudflare Worker serves this app, the API and the MCP server, with D1 and Workers AI (ADR-0048).',
               },
             ].map((fact) => (
               <li

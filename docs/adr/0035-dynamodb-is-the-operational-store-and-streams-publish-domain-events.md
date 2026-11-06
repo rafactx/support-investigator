@@ -1,3 +1,7 @@
+---
+status: accepted, amended by ADR-0048
+---
+
 # DynamoDB is the operational store; Streams publish domain events when consumers exist
 
 DynamoDB stores each Investigation Audit Trail and its Current Investigation projection, using transactional and conditional writes so appending history, advancing a revision and updating the projection remain consistent. The first deployed slice adopts this store while investigation execution remains synchronous; an in-memory adapter exists only for local tests.

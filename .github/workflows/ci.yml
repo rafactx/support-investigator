@@ -1,41 +1,30 @@
 name: CI
 
-# Gates PRs on the same 5 commands a developer runs locally: typecheck,
-# lint, unit tests (including the Fulfillment Playbook / Finding Policy
-# Public Reference Scenarios and the intake-injection sabotage battery),
-# the deterministic `pnpm evals:intake` intake-extraction
-# suite, and `cdk synth`. There is no `pnpm evals`
-# golden-ticket harness: it was removed along with the model-driven `/investigate` route it
-# exercised — the Fulfillment Playbook's determinism is proven by ordinary
-# unit tests now, not a separate scripted-model eval run.
-# `pnpm evals:intake:live`/`pnpm evals:live` are deliberately not run here —
-# informational, non-gating reports against the real model provider
-# (ADR-0017).
-#
-# `push: branches: [main]` exists only so the README badge has a
-# main-branch run to render its status from — badges reflect the default
-# branch's latest run, and a pull_request-only trigger never produces one.
+# The same commands CONTRIBUTING.md lists. No live-model evals, no deploys (ADR-0017, ADR-0049).
 on:
   push:
     branches: [main]
   pull_request:
 
-# Cancel superseded runs on the same ref so the badge always reflects the
-# latest push, not a stale in-flight run.
+permissions:
+  contents: read
+
+# Superseded pull request runs are cancelled; every run on main finishes.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gate:
-    name: typecheck, lint, test, evals, cdk synth
+  ci:
+    name: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
@@ -49,19 +38,18 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      # `infra/support-investigator-stack.ts` stages `web/dist` as a CDK
-      # asset at synth time (BucketDeployment.Source.asset) — both the
-      # stack unit tests (`Unit tests`, below) and `cdk synth` need it to
-      # exist on disk. `web/dist` is gitignored and only ever produced
-      # locally by a real `pnpm --filter web build`, which CI never ran.
+      # The CDK stack tests, `cdk synth` and the Worker bundle all read web/dist.
       - name: Build SPA
         run: pnpm build:web
 
       - name: Unit tests
         run: pnpm test
 
-      - name: Evals (deterministic intake extraction, 30 PT/EN tickets)
+      - name: Intake evals (deterministic)
         run: pnpm evals:intake
 
       - name: cdk synth
         run: pnpm cdk synth
+
+      - name: Cloudflare Worker bundle (dry run)
+        run: pnpm cf:check

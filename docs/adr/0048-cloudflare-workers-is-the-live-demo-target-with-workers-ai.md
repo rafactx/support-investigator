@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The live demo runs on one Cloudflare Worker with Workers AI; AWS CDK stays the reference deployment
 
 The reference AWS deployment (ADR-0002) is meant to be up only during a demo window, and every route sits behind a shared key. A public demo has to stay up, cost nothing at rest, and let anyone run the deterministic flow (ADR-0047). We decided to host it on Cloudflare:

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The Evidence Ledger uses typed, versioned facts
 
 The Evidence Ledger is a discriminated union of immutable domain facts rather than strings or arbitrary JSON. Each Ledger Fact has a shared provenance envelope and a versioned type-specific body, initially covering inventory, fulfillment simulation, warehouse-to-dock relationships, dock-to-policy relationships and destination coverage. Operational adapters normalize external payloads into these facts at the seam, so Finding Policies never parse provider responses or model prose.

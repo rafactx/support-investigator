@@ -2,9 +2,7 @@ import type { InvestigationResponse } from '../../../src/api/investigations-app.
 import type { FindingCode } from '../../../src/domain/finding-policy.ts';
 import type { ReviewReason as DomainReviewReason } from '../../../src/domain/investigation.ts';
 
-// Type-only import from the backend's own domain module: no runtime
-// dependency crosses the workspace boundary, so `web/` never needs `zod`
-// or a hand-copied second definition of this contract.
+// Type-only import: no runtime code crosses the workspace boundary.
 export type { InvestigationResponse } from '../../../src/api/investigations-app.ts';
 
 export type FetchLike = (
@@ -16,14 +14,7 @@ interface ErrorResponseBody {
   error?: { message?: string };
 }
 
-/**
- * Carries the HTTP status alongside the message so a caller can
- * distinguish *why* a request failed — the explanation-improvement flow
- * specifically needs "Language Assistance is unavailable" (503) to read differently from a
- * stale-revision or conflicting-payload rejection (409), rather than every
- * `requestExplanationImprovement` failure collapsing into one generic
- * message regardless of cause.
- */
+/** Carries the HTTP status so callers can tell a 503 (model unavailable) from a 409. */
 export class InvestigationsApiError extends Error {
   constructor(
     message: string,
@@ -35,12 +26,8 @@ export class InvestigationsApiError extends Error {
 }
 
 /**
- * What the intake form collects: ticket text, explicit
- * structured intake, or both. `accountId` stays required in this form —
- * Account Scope always comes from explicit trusted context, never from
- * `ticketText` (AC2) — while the other structured fields are optional:
- * leaving one blank lets Language Assistance propose it from `ticketText`
- * instead, subject to N2 confirmation via `patchIntake`.
+ * Ticket text, structured intake, or both. `accountId` is always required;
+ * a blank field may be proposed from `ticketText` and confirmed later.
  */
 export interface FulfillmentIntakeInput {
   accountId: string;
@@ -51,19 +38,12 @@ export interface FulfillmentIntakeInput {
   destinationPostalCode?: string;
 }
 
-// Re-exported under the same name, same type-only-import pattern as
-// `InvestigationResponse` above: CONTEXT.md's canonical Review Reason
-// has exactly one definition, in the domain module.
+// Re-exported so Review Reason has one definition, in the domain module.
 export type ReviewReason = DomainReviewReason;
 
 /**
- * `POST /investigations/:id/reviews`'s request body:
- * `confirmed` needs only a declared `reviewerName`; `corrected` also
- * requires a `correctedFindingCode` from the supported taxonomy plus a
- * `reason`; `inconclusive` requires a `reason` — never a
- * `correctedFindingCode`, since an unsupported diagnosis has no taxonomy
- * slot to hold it (`outside_supported_playbook` is the reason for exactly
- * that case). `note` is optional on every outcome.
+ * `corrected` needs a supported `correctedFindingCode` and a `reason`;
+ * `inconclusive` needs a `reason`. `note` is optional.
  */
 export type AppendReviewInput =
   | { outcome: 'confirmed'; expectedRevision: number; reviewerName: string; note?: string }
@@ -77,13 +57,7 @@ export type AppendReviewInput =
     }
   | { outcome: 'inconclusive'; expectedRevision: number; reviewerName: string; reason: ReviewReason; note?: string };
 
-/**
- * `PATCH /investigations/:id/intake`'s request body:
- * an explicit field value corrects or completes intake; a field name in
- * `confirm` approves an existing Language Assistance proposal as-is
- * without retyping it. `expectedRevision` is required optimistic
- * concurrency, not optional.
- */
+/** An explicit value corrects or completes a field; `confirm` approves a proposal as-is. */
 export interface PatchIntakeInput {
   expectedRevision: number;
   accountScope?: { accountId: string };
@@ -100,14 +74,8 @@ async function readErrorMessage(response: { json(): Promise<unknown> }, fallback
 }
 
 /**
- * `POST /investigations` (AC1): sends confirmed structured intake plus a
- * client-generated `Idempotency-Key`, so a double form submit (a slow
- * network retry, a second click) replays the original Investigation
- * instead of creating a duplicate (AC5). A 409 conflict means the same
- * key was already used for different field values — practically
- * unreachable from this form (a fresh key is minted per submit attempt,
- * see `investigation-intake-form.tsx`), but still surfaced as a real error
- * rather than swallowed.
+ * `POST /investigations`. The caller passes a fresh `Idempotency-Key` per
+ * submit, so a network retry replays the original Investigation.
  */
 export async function createInvestigation(
   baseUrl: string,
@@ -144,7 +112,7 @@ export async function createInvestigation(
   return (await response.json()) as InvestigationResponse;
 }
 
-/** `GET /investigations/:id` (AC2/AC6): the resource URL the hash route re-fetches on load and refresh. */
+/** `GET /investigations/:id`: the resource URL the hash route re-fetches on load and refresh. */
 export async function getInvestigation(
   baseUrl: string,
   id: string,
@@ -167,13 +135,7 @@ export async function getInvestigation(
   return (await response.json()) as InvestigationResponse;
 }
 
-/**
- * `PATCH /investigations/:id/intake`: confirms,
- * completes or corrects intake and, when the merged intake becomes ready,
- * synchronously resumes the same Investigation. Requires an
- * `Idempotency-Key` the same way `createInvestigation` does — a fresh key
- * per submit attempt, not a retry key.
- */
+/** `PATCH /investigations/:id/intake`. Resumes the Investigation when the intake becomes ready. */
 export async function patchIntake(
   baseUrl: string,
   id: string,
@@ -203,15 +165,9 @@ export async function patchIntake(
 }
 
 /**
- * `POST /investigations/:id/explanations`: N2's
- * explicit request for a Bedrock-improved explanation of an already
- * `completed` Investigation. Requires an `Idempotency-Key` the same way
- * `createInvestigation`/`patchIntake` do — a fresh key per click, not a
- * retry key — and the current `expectedRevision`. A 503 response means
- * Language Assistance itself was unavailable (not a rejection): the caller
- * keeps showing the deterministic explanation and the same
- * `expectedRevision` still applies to a retry, since this call is never
- * committed to the Investigation Audit Trail when Bedrock fails.
+ * `POST /investigations/:id/explanations`. A 503 means Language Assistance
+ * was unavailable; nothing was committed, so a retry at the same
+ * `expectedRevision` is valid.
  */
 export async function requestExplanationImprovement(
   baseUrl: string,
@@ -244,13 +200,7 @@ export async function requestExplanationImprovement(
   return (await response.json()) as InvestigationResponse;
 }
 
-/**
- * `POST /investigations/:id/reviews`: appends a
- * declared, attributed Human Review to an already-`completed`
- * Investigation. Requires an `Idempotency-Key` the same way
- * `createInvestigation`/`patchIntake`/`requestExplanationImprovement` do —
- * a fresh key per submit attempt, not a retry key.
- */
+/** `POST /investigations/:id/reviews`. Appends a Human Review to a completed Investigation. */
 export async function appendReview(
   baseUrl: string,
   id: string,

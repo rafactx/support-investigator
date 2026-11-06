@@ -77,22 +77,18 @@ A rewritten explanation is accepted only if a structural grounding check passes:
 
 ## Evals and safety
 
-Every number below comes from running the commands in this repository.
-
 | Command | What it is | Gates CI |
 | --- | --- | --- |
-| `pnpm test` | 446 Vitest tests in 47 files, 41 of them inside the Workers runtime against a local D1 (27 more are skipped because they need live DynamoDB credentials). They cover the Public Reference Scenarios end to end, the Finding Policy truth table, capability failure classification (permission, transport, schema), the repository and gateway contract suites, MCP adapter contracts, abuse controls, the Cloudflare Worker composition, and the CDK stack. | Yes |
+| `pnpm test` | The Vitest suite: the Public Reference Scenarios end to end, the Finding Policy truth table, capability failure classification, the repository and gateway contract suites, MCP adapter contracts, abuse controls, the Worker composition and the CDK stack. D1 and Worker tests run in the Workers runtime against a local D1. DynamoDB integration tests are skipped without credentials. | Yes |
 | Ticket-injection sabotage battery (inside `pnpm test`) | Adversarial ticket text tries to supply Account Scope, pre-confirm fields, inject a Ledger Fact and dictate a Finding. A worst-case compromised extractor echoes all of it. The battery proves none of it takes effect, and a deliberately broken twin proves the battery really fails when the boundary breaks. | Yes |
 | `pnpm evals:intake` | 30 labeled PT/EN tickets run through the intake pipeline with **scripted** extractor outputs, including deliberate fabrications and decoys. It checks per-field precision and recall, the invented-identifier rate, and that every proposal stays unconfirmed. This tests the harness and the boundary. It does **not** measure model quality. | Yes |
 | `pnpm evals:intake:live` | The same 30 tickets against a real model: `LANGUAGE_MODEL_PROVIDER=workers-ai` with Cloudflare credentials, or Bedrock by default. It is informational and never gates. If credentials are unavailable, it reports `SKIPPED` instead of passing. No live results are published here. | No |
 
-An earlier version of this project had a model-driven `/investigate` route and a 15-ticket golden-ticket eval harness. Both were removed when the deterministic playbook replaced the agent loop ([ADR-0046](./docs/adr/0046-cut-over-to-resource-oriented-investigation-and-remove-strands.md)). Determinism is now proven by ordinary tests, not by a scripted model run.
-
-**Abuse controls** for a public deployment are platform-neutral Hono middleware ([ADR-0047](./docs/adr/0047-public-demo-abuse-controls-are-platform-neutral-middleware.md)). It caps the request body size and ticket text (4,000 characters). It applies fixed-window rate limits keyed by a salted digest of the client address: investigation creation, model-assisted requests per client, a global model budget, writes and MCP calls. A valid demo key bypasses the limits. Every denial returns a generic `429` and is logged server-side.
+**Abuse controls** are platform-neutral Hono middleware ([ADR-0047](./docs/adr/0047-public-demo-abuse-controls-are-platform-neutral-middleware.md)): caps on request body size and ticket text (4,000 characters), and fixed-window rate limits keyed by a salted digest of the client address for creation, model-assisted requests, a global model budget, writes and MCP calls. A valid demo key bypasses the limits. Every denial returns a generic `429` and is logged server-side.
 
 ## Quickstart
 
-Requires Node.js 22+ and pnpm.
+Requires Node.js 22.9+ and pnpm.
 
 ```bash
 pnpm install && pnpm dev
@@ -139,22 +135,26 @@ Any Streamable HTTP MCP client can connect to `/mcp`. Locally, `pnpm dev <comman
 
 ## Deployment
 
-- **Live demo (Cloudflare):** one Worker serves the Investigations API, the Support MCP and the SPA (Workers Static Assets) on one origin, with D1 as the audit trail and Workers AI as the model ([ADR-0048](./docs/adr/0048-cloudflare-workers-is-the-live-demo-target-with-workers-ai.md)). Per-client burst limits use the Workers Rate Limiting binding; the global daily model budget is a D1 counter sized to stay inside the Workers AI free allocation. `pnpm cf:check` builds the bundle with no login; `pnpm cf:dev` runs it locally with a local D1. [`docs/deploy-cloudflare.md`](./docs/deploy-cloudflare.md) is the deploy runbook.
+- **Live demo (Cloudflare):** one Worker serves the Investigations API, the Support MCP and the SPA (Workers Static Assets) on one origin, with D1 as the audit trail and Workers AI as the model ([ADR-0048](./docs/adr/0048-cloudflare-workers-is-the-live-demo-target-with-workers-ai.md)). Per-client burst limits use the Workers Rate Limiting binding; the global daily model budget is a D1 counter sized to stay inside the Workers AI free allocation. `pnpm cf:check` builds the Worker bundle (after `pnpm build:web`) with no login, and CI runs it on every pull request; `pnpm cf:dev` runs it locally with a local D1. [`docs/deploy-cloudflare.md`](./docs/deploy-cloudflare.md) is the deploy runbook.
 - **Reference AWS deployment (CDK):** `infra/` defines API Gateway HTTP API → Investigations Lambda (DynamoDB audit trail) and Support MCP Lambda, a demo-key Lambda authorizer, and the SPA on S3 + CloudFront. `pnpm cdk synth` runs in CI with no credentials. The stack is meant to be up only during a demo, and [`docs/runbooks/cdk-destroy.md`](./docs/runbooks/cdk-destroy.md) is a required teardown step. After a deploy, `pnpm smoke:deployed` runs the authenticated release smoke ([`docs/release-evidence.md`](./docs/release-evidence.md)).
 
 ## Project status
 
-- **Done:** the focused Fulfillment Investigation end to end: resource-oriented API, durable audit trail, intake confirmation, explanation improvement, Human Review, Support MCP v2, the SPA, CI, the Cloudflare Worker target, and the reference AWS deployment.
+- **Done:** the focused Fulfillment Investigation end to end: resource-oriented API, durable audit trail, intake confirmation, explanation improvement, Human Review, the Support MCP, the SPA, CI, the Cloudflare Worker target, and the reference AWS deployment.
 - **Platform seams:** `InvestigationRepository`, `RateLimiter`, `LanguageAssistance` (`createModelLanguageAssistance(model)`), `EmbedProvider` and `CommerceGateway`, with Cloudflare and AWS implementations and, where one exists, a shared contract suite.
-- **Not done:** the first public deployment of the Cloudflare target, an asynchronous worker, the CX intelligence loop ([ADR-0027](./docs/adr/0027-cx-intelligence-loop-is-the-required-second-slice.md)), and a live commerce-platform adapter.
+- **Not done:** an asynchronous worker, the CX intelligence loop ([ADR-0027](./docs/adr/0027-cx-intelligence-loop-is-the-required-second-slice.md)), and a live commerce-platform adapter.
 
 All fixtures, identifiers and payload shapes are synthetic. This is an independent project.
 
 ## Learn more
 
 - [`CONTEXT.md`](./CONTEXT.md): the domain glossary.
-- [`docs/adr/`](./docs/adr/): every architecture decision, in order.
+- [`docs/adr/`](./docs/adr/README.md): every architecture decision, in order, with its current status.
 - [`docs/demo-script.md`](./docs/demo-script.md): the three-minute scripted demo.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, the checks CI runs and the pull request flow. Report vulnerabilities as described in [SECURITY.md](./SECURITY.md).
 
 ## License
 

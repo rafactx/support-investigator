@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The Fulfillment Playbook is deterministic and MCP is an adapter
 
 The first-party Fulfillment Playbook executes every required Operational Capability in a deterministic, evidence-driven order and evaluates the resulting ledger through the Finding Policy. AI is limited to language-heavy edges such as extracting ambiguous inputs, retrieving optional explanatory knowledge and drafting a grounded explanation or next action; it cannot skip mandatory checks or assign findings and decisions. The first-party runner calls the capability module directly, while Support MCP is an adapter exposing the same capabilities to independent consumers rather than an internal network hop back into the product.
@@ -8,4 +12,4 @@ After the domain core, resource API and deployed repository are green, the focus
 
 The focused slice removes the autonomous Strands tool loop and the Agent API-to-Support-MCP self-call from its critical path. MCP tools validate protocol inputs, invoke Operational Capabilities and encode normalized results; they do not own provider normalization or Finding behavior. Contract tests exercise the same capability through direct and MCP adapters.
 
-Amazon Bedrock remains the primary Language Assistance provider for both the portfolio demo and the AWS deployment, reached through AI SDK Core while reusing the model access, region and IAM groundwork already proven by the prototype. Bedrock availability is not required for domain correctness: failed intake extraction falls back to structured input, while every completed Investigation already has a deterministic Finding Source Pack explanation and may request a model-improved explanation separately. Neither failure changes the Evidence Ledger, Finding Code or Investigation Decision. A future exploratory mode may use an agentic tool loop, but its output remains an Unreviewed Signal and cannot bypass Evidence Contracts.
+Amazon Bedrock remains the primary Language Assistance provider for both the demo and the AWS deployment, reached through AI SDK Core while reusing the model access, region and IAM groundwork already proven by the prototype. Bedrock availability is not required for domain correctness: failed intake extraction falls back to structured input, while every completed Investigation already has a deterministic Finding Source Pack explanation and may request a model-improved explanation separately. Neither failure changes the Evidence Ledger, Finding Code or Investigation Decision. A future exploratory mode may use an agentic tool loop, but its output remains an Unreviewed Signal and cannot bypass Evidence Contracts.

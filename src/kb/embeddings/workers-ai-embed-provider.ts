@@ -7,10 +7,10 @@ import type { EmbedProvider } from './embed-provider.ts';
  * dense dimensions, and the cheapest Workers AI embedding per token.
  * Override with `WORKERS_AI_EMBED_MODEL`.
  */
-export const DEFAULT_WORKERS_AI_EMBED_MODEL = '@cf/baai/bge-m3';
+const DEFAULT_WORKERS_AI_EMBED_MODEL = '@cf/baai/bge-m3';
 
 /** Output size of each supported Workers AI embedding model; the index records it (ADR-0009). */
-export const WORKERS_AI_EMBED_DIMENSIONS: Readonly<Record<string, number>> = {
+const WORKERS_AI_EMBED_DIMENSIONS: Readonly<Record<string, number>> = {
   '@cf/baai/bge-m3': 1024,
   '@cf/baai/bge-large-en-v1.5': 1024,
   '@cf/baai/bge-base-en-v1.5': 768,

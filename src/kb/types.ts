@@ -14,7 +14,7 @@ export type EmbedProviderId = z.infer<typeof EmbedProviderIdSchema>;
  * embedded; `excerpt` is what `search_support_knowledge` shows the caller
  * (`results[]` with title/url/excerpt/score).
  */
-export const KnowledgeChunkSchema = z.object({
+const KnowledgeChunkSchema = z.object({
   id: z.string(),
   title: z.string(),
   url: z.string(),

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Local-dev SPA reaches the Agent API through Vite's dev proxy, not backend CORS headers
 
 Building the evidence-timeline SPA required deciding how the browser, running on Vite's dev origin (`http://localhost:5173`), reaches the Agent API's `POST /investigate` on its own origin (`http://localhost:8787`, `pnpm dev serve`). The obvious approach — call `http://localhost:8787/investigate` directly from the browser with `fetch` — fails immediately: `createInvestigateApp` (`src/api/app.ts`) sets no CORS headers, so the browser blocks the cross-origin request before it ever reaches the server (`TypeError: Failed to fetch`), confirmed live against the real local stack while building the SPA, not assumed from reading the code.

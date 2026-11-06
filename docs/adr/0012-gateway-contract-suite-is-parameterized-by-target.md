@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The gateway contract suite is parameterized by target, not literal-shared
 
 `CommerceGateway` implementations must be provably interchangeable, not just independently correct. The shared contract is `describeCommerceGatewayContract` (`src/gateway/commerce-gateway.contract.ts`): it asserts the behaviors the interface's own doc comments promise — a known order carries every field in `EXPECTED_RAW_ORDER_FIELDS`; an unknown order rejects with `OrderNotFoundError` (never `OrderAccessDeniedError`, ADR-0011); a known simulation returns a stocked line with at least one delivery option; an unknown SKU never throws; warehouse, dock, shipping-policy and coverage-zone lookups return the shapes the capabilities chain on.

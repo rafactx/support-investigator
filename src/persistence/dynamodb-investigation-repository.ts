@@ -33,14 +33,9 @@ const PROJECTION_SORT_KEY = 'CURRENT';
 const EVENT_SORT_KEY_PREFIX = 'EVT#';
 
 /**
- * Zero-padded so `EVT#<revision>#<eventId>` sorts numerically, not
- * lexicographically (EVT#10 after EVT#9, not before). `eventId` is a
- * deterministic digest of the idempotency key, not a random uuid — an
- * exact retry that reaches this function (because it raced the idempotency
- * item's own `attribute_not_exists` check and lost) must derive the *same*
- * SK the first attempt did, so ADR-0035's "inserts the event only if
- * absent" has an actual condition to enforce rather than a random SK that
- * can never collide.
+ * Zero-padded so `EVT#<revision>#<eventId>` sorts numerically. `eventId` is a
+ * digest of the idempotency key, so a raced exact retry derives the same SK
+ * and the "insert only if absent" condition can catch it.
  */
 function eventSortKey(revision: number, idempotencyKey: string): string {
   const eventId = createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 32);
@@ -48,11 +43,8 @@ function eventSortKey(revision: number, idempotencyKey: string): string {
 }
 
 /**
- * The scoped create-idempotency item ADR-0035 describes ("a scoped key item
- * that points repeated submissions to the original Investigation"). Its own
- * partition — not `INV#<id>` — because an Idempotency-Key arrives before
- * its target investigationId is known to the caller doing the lookup
- * (`findByIdempotencyKey`).
+ * The idempotency item (ADR-0035). It has its own partition because the
+ * lookup happens before the caller knows the investigation id.
  */
 function idempotencyPartitionKey(idempotencyKey: string): string {
   return `IDEMP#${idempotencyKey}`;
@@ -87,23 +79,14 @@ export interface DynamoDbInvestigationRepositoryConfig {
   readonly client?: DynamoDBClient;
 }
 
-/**
- * Reads the table name this adapter needs from the environment
- * (`INVESTIGATION_TABLE_NAME`): returns `undefined`, never throws, so the
- * caller (the API Lambda entrypoint, or this module's own
- * integration test) decides what an absent value means.
- */
+/** Returns `undefined` when `INVESTIGATION_TABLE_NAME` is unset; the caller decides what that means. */
 export function readInvestigationTableName(env: NodeJS.ProcessEnv = process.env): string | undefined {
   return env.INVESTIGATION_TABLE_NAME;
 }
 
 /**
- * Reads all `EVT#` items for an investigation, ordered oldest-first by the
- * zero-padded sort key. `getCurrentInvestigation` prefers the materialized
- * `CURRENT` item on the normal path (see `readProjection`); this full scan
- * exists for the commit path (which must fold in the event about to be
- * appended) and for AC6's "reconstructed from immutable historical events
- * and matches the materialized projection" cross-check.
+ * All `EVT#` items, oldest first. Product reads use the `CURRENT` item; this
+ * is for the commit path and for checking that the events fold into it.
  */
 async function queryEvents(
   doc: DynamoDBDocumentClient,
@@ -123,13 +106,8 @@ async function queryEvents(
           ':prefix': EVENT_SORT_KEY_PREFIX,
         },
         ExclusiveStartKey: exclusiveStartKey,
-        // A strongly consistent read, not DynamoDB's eventually-consistent
-        // default: `lookupByIdempotencyKey`'s "found" branch and every
-        // command's own not-found/stale-revision pre-check depend on
-        // seeing a write this same request chain just made (or another
-        // request just committed), never a stale replica — a stale read
-        // here can misroute a genuine exact retry into
-        // `idempotency-conflict` (AC4).
+        // Strongly consistent: a stale replica could turn an exact retry into
+        // `idempotency-conflict`.
         ConsistentRead: true,
       }),
     );
@@ -154,9 +132,7 @@ async function readProjection(
         ':pk': investigationPartitionKey(investigationId),
         ':sk': PROJECTION_SORT_KEY,
       },
-      // See `queryEvents`'s own comment: this read must never be stale,
-      // since `lookupByIdempotencyKey` folds its result directly into
-      // whether a retry is treated as an exact replay.
+      // Strongly consistent for the same reason as `queryEvents`.
       ConsistentRead: true,
     }),
   );
@@ -207,31 +183,19 @@ type CommitOutcome =
   | { readonly kind: 'idempotency-conflict' };
 
 /**
- * Index within `transactItems` (below) that each condition lives at — used
- * to interpret `TransactionCanceledException.CancellationReasons`, which is
- * positionally parallel to the request's own `TransactItems` (AWS's
- * documented contract, not an assumption). Distinguishing which condition
- * failed is what lets a raced idempotent retry return `idempotent-replay`
- * instead of a spurious `stale-revision`.
+ * Positions in `transactItems`. `CancellationReasons` is parallel to them,
+ * which tells a raced retry apart from a stale revision.
  */
 const EVENT_ITEM_INDEX = 0;
 const PROJECTION_ITEM_INDEX = 1;
 const IDEMPOTENCY_ITEM_INDEX = 2;
 
 /**
- * Appends one event and atomically advances the projection, all inside a
- * single `TransactWriteItems` call (ADR-0035's "conditionally checks the
- * current revision, inserts the event only if absent and advances the
- * projection atomically"). `expectedRevision` doubles as the projection's
- * optimistic-concurrency guard and, for a brand-new investigation, is
- * asserted absent instead (`attribute_not_exists`).
- *
- * A cancelled transaction is inspected item-by-item via
- * `CancellationReasons` rather than treated as one undifferentiated
- * failure: the idempotency item losing a race (two concurrent exact
- * retries) is `idempotency-conflict`-shaped work for the caller to resolve
- * via `lookupByIdempotencyKey`, not the same outcome as a genuine stale
- * revision.
+ * Appends one event and advances the projection in a single
+ * `TransactWriteItems` call (ADR-0035). A new investigation asserts the
+ * projection is absent instead of checking `expectedRevision`. A cancelled
+ * transaction is inspected per item so a raced idempotency item is not
+ * reported as a stale revision.
  */
 async function commitEvent(
   doc: DynamoDBDocumentClient,
@@ -321,10 +285,7 @@ async function commitEvent(
       if (projectionFailed) {
         return { kind: 'stale-revision' };
       }
-      // A cancellation with no recognized ConditionalCheckFailed reason
-      // (throughput throttling, a validation error on another item) is a
-      // genuine unexpected failure this port has no recoverable outcome
-      // for — rethrow rather than mis-map it.
+      // Throttling or another unexpected cancellation has no mapped outcome.
       throw error;
     }
     throw error;
@@ -353,16 +314,9 @@ async function resolveIdempotencyConflict(
 }
 
 /**
- * The DynamoDB-backed `InvestigationRepository` (ADR-0035): the
- * deployed store behind the same port the in-memory adapter implements for
- * local tests (ADR-0036). Every accepted command appends one immutable
- * `EVT#` item and atomically advances the `CURRENT` projection item inside
- * one `TransactWriteItems` call — never two separate writes a crash could
- * leave half-applied. `findByIdempotencyKey` is read-only (a `Query`, not
- * part of any transaction) — it exists purely as callers' pre-check before
- * running the Fulfillment Playbook; the authoritative guard
- * is the `attribute_not_exists` condition each commit places on its own
- * idempotency and event items.
+ * The DynamoDB `InvestigationRepository` used by the AWS deployment
+ * (ADR-0035). Every command writes one immutable `EVT#` item and the
+ * `CURRENT` projection in one transaction.
  */
 export function createDynamoDbInvestigationRepository(
   config: DynamoDbInvestigationRepositoryConfig,

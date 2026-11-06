@@ -1,14 +1,7 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import type { EmbedProvider } from './embed-provider.ts';
 
-/**
- * Verified working against the target AWS account with a live
- * `aws bedrock-runtime invoke-model` call (see commit/issue for the
- * confirmed run) — same "region-prefixed inference profile, not a bare
- * model ID" caution as `create-model.ts` doesn't apply here: Titan
- * Embeddings is invoked directly by model ID, no inference profile
- * required.
- */
+/** Titan Embeddings is invoked by model id; it needs no inference profile. */
 const DEFAULT_MODEL_ID = 'amazon.titan-embed-text-v2:0';
 const DIMENSIONS = 256;
 
@@ -17,7 +10,7 @@ interface TitanEmbedResponse {
 }
 
 /**
- * `EMBED_PROVIDER=bedrock-titan` (the default) — Bedrock Titan
+ * `EMBED_PROVIDER=bedrock-titan` — Bedrock Titan
  * Embeddings v2, one `InvokeModel` call per text. Used both at
  * `kb:refresh` build time (embeds curated docs) and at runtime by
  * `search_support_knowledge` (embeds the query with the same

@@ -98,7 +98,7 @@ describe.skipIf(!tableReachable)('DynamoDbInvestigationRepository: table shape',
     'requestFingerprint',
   ]);
 
-  it('AC2/AC6: the CURRENT projection matches an investigation independently reconstructed by folding its immutable EVT# items', async () => {
+  it('the CURRENT projection matches an investigation independently reconstructed by folding its immutable EVT# items', async () => {
     const table = resolvedTableName();
     const repository = createDynamoDbInvestigationRepository({ tableName: table, client: new DynamoDBClient({}) });
     const investigationId = `inv-${randomUUID()}`;
@@ -157,7 +157,7 @@ describe.skipIf(!tableReachable)('DynamoDbInvestigationRepository: table shape',
     expect(projection?.reviews).toHaveLength(1);
   });
 
-  it('AC7: every persisted item exposes only the allowed top-level fields — no raw ticket text or credential fields', async () => {
+  it('every persisted item exposes only the allowed top-level fields — no raw ticket text or credential fields', async () => {
     const table = resolvedTableName();
     const repository = createDynamoDbInvestigationRepository({ tableName: table, client: new DynamoDBClient({}) });
     const investigationId = `inv-${randomUUID()}`;
@@ -201,7 +201,7 @@ describe.skipIf(!tableReachable)('DynamoDbInvestigationRepository: table shape',
    * only ever exercise the already-committed `findByIdempotencyKey`
    * pre-check, never `commitEvent`'s `CancellationReasons` branch.
    */
-  it('AC4/AC5: two concurrent exact retries race the transaction and both resolve to the same investigation', async () => {
+  it('two concurrent exact retries race the transaction and both resolve to the same investigation', async () => {
     const table = resolvedTableName();
     const repository = createDynamoDbInvestigationRepository({ tableName: table, client: new DynamoDBClient({}) });
     const investigationId = `inv-${randomUUID()}`;

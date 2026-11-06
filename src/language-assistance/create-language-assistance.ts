@@ -10,8 +10,6 @@ import {
   type WorkersAiAccess,
 } from './workers-ai-language-assistance.ts';
 
-export { type LanguageModelProvider, LanguageModelProviderSchema } from './language-model-provider.ts';
-
 /**
  * Selects Language Assistance by `LANGUAGE_MODEL_PROVIDER`:
  *

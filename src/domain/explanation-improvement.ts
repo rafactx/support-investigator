@@ -5,12 +5,8 @@ import { FINDING_SOURCE_PACK_VERSION, findingSourcePack, type SourceReference } 
 import type { ConfirmedFulfillmentIntake } from './fulfillment-playbook.ts';
 
 /**
- * The Bedrock-improved explanation: same pinned Source Pack
- * version and provenance concept as the deterministic `FindingExplanation`
- * (`finding-source-pack.ts`), plus `generatedAt` from the caller's own
- * clock — never `new Date()` inside this module, so tests stay
- * deterministic the same way `now()` is threaded everywhere else in this
- * codebase.
+ * An improved explanation, with the same pinned Source Pack version as the
+ * deterministic one. `generatedAt` comes from the caller's clock.
  */
 export interface ImprovedExplanation {
   readonly summary: string;
@@ -24,14 +20,8 @@ function placeholderPattern(): RegExp {
 }
 
 /**
- * The placeholder allowlist: `ConfirmedFulfillmentIntake` (never an
- * unconfirmed model proposal — the same narrowing seam ADR-0044 already
- * establishes for the Fulfillment Playbook) plus whatever identifiers the
- * Evidence Ledger or a capability failure actually produced for this
- * Investigation. Keyed by placeholder name: `buildExplanationImprovementRequest`
- * sends only these *names* to the model, never the values held here, so a
- * fabricated identifier is a placeholder that fails to resolve rather than
- * a string pattern matched out of free prose after the fact.
+ * Placeholder name to value, from confirmed intake plus identifiers the
+ * ledger or a capability failure produced. Only the names go to the model.
  */
 export function buildAllowedPlaceholders(input: {
   readonly intake: ConfirmedFulfillmentIntake;
@@ -68,19 +58,9 @@ export function buildAllowedPlaceholders(input: {
 }
 
 /**
- * `finding-source-pack.ts`'s deterministic `summaryFor` interpolates
- * `capabilityFailure.capability`/`.message` verbatim into prose for every
- * *other* Decision Reason's already-generic, digit-free text — but a
- * capability failure message is a provider/transport string this project
- * never controls, so it is exactly the kind of raw identifier the model
- * must never see directly (it could contain a digit, defeating
- * `checkExplanationGrounding`'s own "no raw digit outside a placeholder"
- * check with a false rejection, and it's the one channel that would
- * otherwise show the model a real value instead of a placeholder name).
- * This rebuilds only that one branch's model-facing text using the same
- * `{{capabilityName}}`/`{{capabilityFailureMessage}}` placeholders
- * `buildAllowedPlaceholders` already reserves for it — every other
- * Decision Reason's deterministic text is reused as-is.
+ * The deterministic capability-failure summary embeds the provider's error
+ * message, which the model must not see. This rebuilds that one summary with
+ * placeholders; every other summary is reused as-is.
  */
 function deterministicSummaryForModel(input: {
   readonly deterministicSummary: string;
@@ -96,15 +76,8 @@ function deterministicSummaryForModel(input: {
 }
 
 /**
- * Builds the bounded `LanguageAssistance.improveExplanation` request
- * from exactly the confirmed, completed-Investigation
- * facts the model may see: Finding, Decision, Decision Reason, the
- * deterministic explanation to improve on, and the allowed placeholder
- * *names* — never their values, and never a raw Ledger Fact or intake
- * field directly. `placeholders` is the caller's own
- * `buildAllowedPlaceholders` result, passed in rather than recomputed here,
- * so a route that also needs the full name-to-value map for
- * `checkExplanationGrounding` (every caller does) computes it once.
+ * The model sees the Finding, Decision, Decision Reason, the deterministic
+ * explanation and placeholder names, never their values or raw facts.
  */
 export function buildExplanationImprovementRequest(input: {
   readonly findingCode: FindingCode;
@@ -129,20 +102,11 @@ export type GroundingCheck =
   | { readonly kind: 'ungrounded'; readonly reason: string };
 
 /**
- * The deterministic grounding gate: every
- * `{{placeholder}}` in the model's `summaryTemplate` must be one this
- * Investigation actually allowlisted, no digit may appear outside a
- * placeholder (a raw number is either a fabricated identifier or one the
- * model retyped instead of citing symbolically — both are rejected the
- * same way), and every cited URL must already be in the pinned Finding
- * Source Pack for this Finding Code. This is a structural check, not a
- * semantic one: it cannot verify that a claim built entirely from
- * allowlisted placeholders and plain wording is *true*, only that it
- * introduces no fact this Investigation never produced. Passing
- * placeholders are substituted with their real value only after every
- * check succeeds — the model itself never received a real identifier to
- * begin with (`buildExplanationImprovementRequest` sends only placeholder
- * names).
+ * The grounding gate (ADR-0045): every `{{placeholder}}` must be allowlisted,
+ * no digit may appear outside a placeholder, and every citation must be in
+ * the Finding's Source Pack. It is structural, not semantic: it proves no new
+ * fact was introduced, not that the wording is true. Placeholders are
+ * substituted only after every check passes.
  */
 export function checkExplanationGrounding(
   proposal: { readonly summaryTemplate: string; readonly citedSourceUrls: readonly string[] },

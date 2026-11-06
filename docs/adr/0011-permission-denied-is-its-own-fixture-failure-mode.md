@@ -1,3 +1,7 @@
+---
+status: accepted, amended by ADR-0046
+---
+
 # Permission-denied gets its own `OrderAccessDeniedError`, not a reused `OrderNotFoundError`; the tool-activity observer doesn't discriminate the underlying cause
 
 Building the eval harness's permission-403 golden tickets (the testing plan calls for "3 permission/403 cases") required a real, gateway-level failure mode to exercise end to end — the `needs_human` rule ADR-0006 states for "a required tool failed (e.g. a 403)" had unit-test coverage in `policy-gate.test.ts` but no fixture path that actually produced a tool failure through the real `Agent` → `McpClient` → Support MCP → `CommerceGateway` chain. `OrderNotFoundError` already existed and could have been reused (a 403 is, after all, "the order didn't resolve"), but the two are semantically different outcomes with different next actions: a not-found order is a normal, expected dead end (wrong order id, typo, order genuinely doesn't exist) — nothing to escalate about; a permission denial means the platform refused the agent's own credentials, which is exactly the "the platform is down"/"access denied" case ADR-0006's `needs_human` rule exists to force a human into, never silently treat as an empty result.

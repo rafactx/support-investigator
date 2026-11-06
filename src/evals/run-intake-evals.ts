@@ -5,13 +5,11 @@ import { printIntakeEvalReport, runIntakeExtractionEval } from './intake-extract
  * `pnpm evals:intake` — the credential-free, deterministic gate for
  * intake extraction. Runs the 30-ticket labeled PT/EN
  * suite against `createScriptedIntakeLanguageAssistance()` and fails the
- * process if the deliberately-wrong scripted tickets (AC9: false
- * positives, invented identifiers) stop producing the exact non-zero
- * signal this suite's own dataset was designed to prove — the same
- * "detector, not a check that only knows how to pass" property
- * `sabotage-check.ts` establishes for the policy gate. Live Bedrock
- * evaluation over the same 30 tickets is `pnpm evals:intake:live`,
- * deliberately non-gating.
+ * process if the deliberately-wrong scripted tickets (false
+ * positives, invented identifiers) stop producing the non-zero signal the
+ * dataset was designed to produce, so the eval cannot silently pass. Live
+ * model evaluation over the same 30 tickets is `pnpm evals:intake:live`,
+ * which never gates.
  */
 async function main(): Promise<void> {
   const report = await runIntakeExtractionEval(
@@ -22,7 +20,7 @@ async function main(): Promise<void> {
 
   const failures: string[] = [];
   if (!report.allProposalsUnconfirmed) {
-    failures.push('a proposed field was unconfirmed=false — a model proposal must never be pre-confirmed (AC4)');
+    failures.push('a proposed field was unconfirmed=false — a model proposal must never be pre-confirmed');
   }
   if (report.inventedIdentifierRate === 0) {
     failures.push(

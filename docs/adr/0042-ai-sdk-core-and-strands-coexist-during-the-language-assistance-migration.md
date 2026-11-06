@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0046
+---
+
 # AI SDK Core and Strands coexist during the Language Assistance migration
 
 ADR-0039/0040 name AI SDK Core with the Amazon Bedrock provider as the target — and eventually only — LLM abstraction for this project. Intake extraction needed a bounded, schema-constrained extraction call (`src/language-assistance/bedrock-language-assistance.ts`): ticket text in, a Zod-validated `ExtractedIntakeFields` out, no tool loop, no agent. `@strands-agents/sdk`'s own model interface is built around that SDK's own streaming/tool-call event protocol (`ModelStreamEvent`s), not a plain `generateText` + structured-output call, so reusing `src/model/create-model.ts`'s `BedrockModel` for this new seam would have meant either wrapping Strands' agent loop around a task that needs no loop, or reaching past AI SDK's own structured-output primitive to hand-parse Strands' event stream.

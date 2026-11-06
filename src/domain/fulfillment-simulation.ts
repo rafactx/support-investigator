@@ -27,9 +27,8 @@ export type FulfillmentSimulation = z.infer<typeof FulfillmentSimulationSchema>;
 /**
  * Maps a raw platform fulfillment simulation to the `FulfillmentSimulation`
  * a tool returns. `NO_DELIVERY_OPTIONS` is derived here from an empty
- * `deliveryOptions[]` rather than stored as a literal in any fixture — it's a
- * fact about the simulation result, not fixture data (ADR-0006's flagship
- * demo case: stock present, zero delivery options).
+ * `deliveryOptions[]` rather than stored as a literal in any fixture; it is a
+ * fact about the simulation result (stock present, zero delivery options).
  */
 export function toFulfillmentSimulation(
   skuId: string,

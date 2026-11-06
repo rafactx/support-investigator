@@ -13,7 +13,7 @@ import type {
  * absent from `expected` when the ticket text genuinely does not state it
  * (missing) or deliberately states it ambiguously (Language Assistance
  * must abstain, not guess). Every ticket requests all four
- * `ExtractableIntakeField`s — Account Scope is never one of them (AC2).
+ * `ExtractableIntakeField`s — Account Scope is never one of them.
  *
  * `scriptedResponse` is what the deterministic gating harness
  * (`run-intake-evals.ts`, credential-free) scripts a fake extractor to

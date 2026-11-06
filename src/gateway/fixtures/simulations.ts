@@ -6,9 +6,8 @@ import type { RawSimulation } from '../../domain/simulation-record.ts';
  *
  * - `SKU-2001`: in stock, at least one delivery option — normal case.
  * - `SKU-2002`: in stock (`availableQuantity > 0`) but zero delivery options — the
- *   `NO_DELIVERY_OPTIONS` case, and ADR-0006's named flagship demo ticket
- *   ("the SKU has stock but no delivery option shows up"). Deliberately
- *   *not* an out-of-stock SKU — that's a different, unrelated failure mode.
+ *   `NO_DELIVERY_OPTIONS` reference scenario. Not an out-of-stock SKU, which
+ *   is a different failure mode.
  *
  * Any skuId not listed here falls back to `UNKNOWN_SKU_SIMULATION` in
  * `fixture-commerce-gateway.ts`, matching a checkout simulation's behavior of

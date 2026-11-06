@@ -5,10 +5,13 @@
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=22.9.0"
+  },
   "scripts": {
     "dev": "node --env-file-if-exists=.env --experimental-strip-types src/cli.ts",
     "build:web": "pnpm --filter web build",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.workers.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.workers.json && pnpm --filter web typecheck",
     "lint": "biome lint .",
     "test": "vitest run",
     "evals:intake": "node --env-file-if-exists=.env --experimental-strip-types src/evals/run-intake-evals.ts",
@@ -18,12 +21,11 @@
     "cdk": "cdk --app \"node --env-file-if-exists=.env --experimental-strip-types infra/main.ts\"",
     "cf:dev": "pnpm build:web && wrangler d1 migrations apply support-investigator --local && wrangler dev",
     "cf:migrate": "wrangler d1 migrations apply support-investigator --remote",
-    "cf:check": "pnpm build:web && wrangler deploy --dry-run --outdir dist/worker",
+    "cf:check": "wrangler deploy --dry-run --outdir dist/worker",
     "cf:deploy": "pnpm build:web && wrangler deploy"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "5.0.36",
-    "@ai-sdk/provider": "4.0.4",
     "@aws-sdk/client-bedrock-runtime": "3.1095.0",
     "@aws-sdk/client-dynamodb": "3.1095.0",
     "@aws-sdk/client-ssm": "3.1095.0",

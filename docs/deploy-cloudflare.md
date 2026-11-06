@@ -2,13 +2,14 @@
 
 One Worker serves the Investigations API, the Support MCP and the SPA on one origin ([ADR-0048](./adr/0048-cloudflare-workers-is-the-live-demo-target-with-workers-ai.md)). Everything in this runbook runs from the repository root. Nothing here is needed for local development or CI.
 
-You need a Cloudflare account (the Workers Free plan is enough), Node.js 22+ and pnpm.
+You need a Cloudflare account (the Workers Free plan is enough), Node.js 22.9+ and pnpm.
 
 ## 1. Check the bundle locally
 
 ```bash
 pnpm install
-pnpm cf:check        # builds web/dist, then `wrangler deploy --dry-run --outdir dist/worker`
+pnpm build:web       # the Worker serves web/dist as static assets
+pnpm cf:check        # wrangler deploy --dry-run --outdir dist/worker
 ```
 
 This needs no login. It prints the bindings and the upload size; the Worker is about 2 MiB raw, 350 KiB gzipped, well under the 3 MiB Free-plan limit.
@@ -20,7 +21,7 @@ pnpm exec wrangler login
 pnpm exec wrangler d1 create support-investigator
 ```
 
-Copy the `database_id` it prints into `wrangler.jsonc`, replacing the placeholder `00000000-0000-0000-0000-000000000000`. Then apply the migrations to the remote database:
+Copy the `database_id` it prints into `wrangler.jsonc`, replacing the live demo's id. Then apply the migrations to the remote database:
 
 ```bash
 pnpm cf:migrate      # wrangler d1 migrations apply support-investigator --remote

@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # `NO_DELIVERY_OPTIONS` defined as stock present + zero delivery options, not out-of-stock
 
 `ADR-0006` names "the SKU has stock but no delivery option shows up" as the project's flagship case but never pins down what `simulate_fulfillment` returns for it. Two readings were available: derive `NO_DELIVERY_OPTIONS` from `availability: 'unavailable'` (one flavor of out-of-stock), or derive it from an empty `deliveryOptions[]` regardless of stock level. We chose the second: `toFulfillmentSimulation` emits `NO_DELIVERY_OPTIONS` whenever the simulated line's `deliveryOptions` is empty, independent of `availableQuantity`, and the fixture scenario built for it (`SKU-2002`) deliberately carries `availableQuantity: 8` — real stock, zero delivery options — rather than `0`.

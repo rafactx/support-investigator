@@ -3,18 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { describe, expect, it } from 'vitest';
 
-// Independent source of truth for every assertion below: the CI gate's
-// written requirements, never re-derived from the workflow YAML this test
-// exercises or from `package.json`'s current script list. The `pnpm evals`
-// golden-ticket harness was removed along with the old `/investigate` route
-// it exercised; `pnpm evals:intake` (the Language Assistance evaluation) is
-// now the gate's only `evals*` step.
-//
-//   "A GitHub Actions workflow gating PRs on typecheck, lint, unit tests,
-//   `pnpm evals` ..., and `cdk synth`"
-//   "`pnpm evals:live` is not part of the required gate (informational only)"
-//   "Deploy remains manual (`workflow_dispatch`); CI never auto-deploys"
-//   "A status badge is added to the README reflecting the workflow"
+// Guards the CI contract described in CONTRIBUTING.md and ADR-0049: one
+// required job, the full local command list, no live-model evals, no deploys.
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const WORKFLOWS_DIR = fileURLToPath(new URL('.', import.meta.url));
@@ -26,6 +16,7 @@ interface WorkflowStep {
 }
 
 interface WorkflowJob {
+  name?: string;
   steps: WorkflowStep[];
 }
 
@@ -50,9 +41,8 @@ function allSteps(workflow: Workflow): WorkflowStep[] {
   return Object.values(workflow.jobs).flatMap((job) => job.steps);
 }
 
-// pnpm's own built-in subcommands — invoking these isn't "running a
-// package.json script", so they're not checked against package.json.
-const PNPM_BUILTINS = new Set(['install', 'add', 'remove', 'i']);
+// pnpm built-ins, not package.json scripts.
+const PNPM_BUILTINS = new Set(['install']);
 
 // Every `pnpm <script>` a step invokes, e.g. "pnpm cdk synth" -> "cdk".
 function pnpmScriptsInvoked(steps: WorkflowStep[]): string[] {
@@ -67,7 +57,7 @@ function pnpmScriptsInvoked(steps: WorkflowStep[]): string[] {
 describe('CI workflow', () => {
   const ci = loadWorkflow('ci.yml');
 
-  it('runs on pull_request, and the gate job runs typecheck, lint, unit tests, pnpm evals:intake, and cdk synth', () => {
+  it('runs on pull_request, and the ci job runs typecheck, lint, the SPA build, unit tests, pnpm evals:intake, cdk synth and the Worker bundle check', () => {
     expect(onKeys(ci)).toContain('pull_request');
 
     const runCommands = allSteps(ci)
@@ -76,38 +66,47 @@ describe('CI workflow', () => {
       .join('\n');
 
     expect(runCommands).toMatch(/pnpm (run )?typecheck/);
+    expect(runCommands).toMatch(/pnpm (run )?build:web/);
     expect(runCommands).toMatch(/pnpm (run )?lint/);
     expect(runCommands).toMatch(/pnpm (run )?test/);
     expect(runCommands).toMatch(/pnpm evals:intake(?!:live)/); // "pnpm evals:intake", not "pnpm evals:intake:live"
     expect(runCommands).toMatch(/pnpm cdk synth/);
-    // The old `/investigate`-route golden-ticket harness is gone
-    // entirely — "pnpm evals" (without a `:intake` suffix) must not appear.
-    expect(runCommands).not.toMatch(/pnpm evals(?!:)/);
+    expect(runCommands).toMatch(/pnpm cf:check/);
   });
 
-  it('pnpm evals:live and pnpm evals:intake:live never appear in the gate workflow', () => {
+  it('builds the SPA before every step that reads web/dist', () => {
+    const scripts = pnpmScriptsInvoked(allSteps(ci));
+    const buildIndex = scripts.indexOf('build:web');
+
+    expect(buildIndex).toBeGreaterThanOrEqual(0);
+    for (const reader of ['test', 'cdk', 'cf:check']) {
+      expect(scripts.indexOf(reader)).toBeGreaterThan(buildIndex);
+    }
+  });
+
+  it('never runs the live-model eval', () => {
     const runCommands = allSteps(ci)
       .map((step) => step.run)
       .filter((run): run is string => Boolean(run))
       .join('\n');
 
-    expect(runCommands).not.toMatch(/evals:live/);
     expect(runCommands).not.toMatch(/evals:intake:live/);
   });
 
-  it('the gate workflow never deploys and triggers on nothing but push/pull_request', () => {
-    // No step anywhere in this workflow runs `cdk deploy` — deploy stays the
-    // CLI path ADR-0002 already decided (dedicated IAM user, not this
-    // workflow) and already exercised by a real deploy.
+  it('has a single job with a stable id and name, so it can be a required check', () => {
+    expect(Object.keys(ci.jobs)).toEqual(['ci']);
+    expect(ci.jobs.ci?.name).toBe('ci');
+  });
+
+  it('the ci workflow never deploys and triggers on nothing but push/pull_request', () => {
+    // Deploys stay manual CLI steps (ADR-0017).
     const ciRunCommands = allSteps(ci)
       .map((step) => step.run)
       .filter((run): run is string => Boolean(run))
       .join('\n');
     expect(ciRunCommands).not.toMatch(/cdk deploy/);
+    expect(ciRunCommands).not.toMatch(/pnpm cf:deploy|wrangler deploy(?! --dry-run)/);
 
-    // The stronger half: `on` is a subset of {push, pull_request} — no
-    // `workflow_dispatch`, `schedule`, or `workflow_run` trigger could ever
-    // fire a deploy path from inside this workflow.
     for (const key of onKeys(ci)) {
       expect(['push', 'pull_request']).toContain(key);
     }
@@ -119,12 +118,10 @@ describe('CI workflow', () => {
 
     expect(badgeMatch).not.toBeNull();
     const badgeWorkflowFile = badgeMatch?.[1] ?? '';
-    // Independent check: the referenced file is actually present in
-    // .github/workflows — a typo'd filename would still "look like" a badge.
     expect(() => loadWorkflow(badgeWorkflowFile)).not.toThrow();
   });
 
-  it('every pnpm <script> the gate workflow invokes is a real package.json script', () => {
+  it('every pnpm <script> the ci workflow invokes is a real package.json script', () => {
     const packageJson = JSON.parse(readFileSync(`${REPO_ROOT}package.json`, 'utf-8')) as {
       scripts: Record<string, string>;
     };

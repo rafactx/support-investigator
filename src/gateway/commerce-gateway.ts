@@ -9,12 +9,7 @@ import type { RawDock } from '../domain/dock-record.ts';
 import type { RawShippingPolicy } from '../domain/shipping-policy-record.ts';
 import type { RawCoverageZone } from '../domain/coverage-record.ts';
 
-/**
- * Thrown by a CommerceGateway implementation when the requested order does not
- * exist. Distinct from a required-tool failure (ADR-0006's `needs_human`
- * "required tool failed" rule) — a missing order is a normal, expected
- * outcome the tool layer surfaces as a tool error, not an exception path.
- */
+/** The requested order does not exist. A normal outcome, surfaced as a tool error. */
 export class OrderNotFoundError extends Error {
   readonly orderId: string;
 
@@ -26,14 +21,8 @@ export class OrderNotFoundError extends Error {
 }
 
 /**
- * Thrown by a CommerceGateway implementation when the caller is not authorized
- * to view the requested order (an order API answers this with a 403). Distinct from `OrderNotFoundError` on purpose: a missing order is
- * a normal, expected outcome (see that error's doc comment above), while a
- * permission denial *is* the required-tool failure ADR-0006's `needs_human`
- * rule exists for — the agent must never treat
- * "the platform is down"/"access denied" as a silent, investigable dead
- * end. `docs/adr/0011` records why this needed its own error/fixture rather
- * than reusing `OrderNotFoundError`.
+ * The caller may not view the requested order (an order API's 403). Unlike a
+ * missing order, this is a capability failure that needs a human (ADR-0011).
  */
 export class OrderAccessDeniedError extends Error {
   readonly orderId: string;
@@ -112,16 +101,9 @@ export class CoverageZonesAccessDeniedError extends Error {
 }
 
 /**
- * Read-only gateway to the commerce platform's order and fulfillment data
- * (ADR-0005). The project ships fixture-only: `createFixtureCommerceGateway`
- * is the sole implementation, serving the Public Reference Scenarios with
- * no credentials or network access.
- *
- * The interface is deliberately the seam a live adapter would plug into: a
- * real platform client only needs to implement these methods and pass the
- * shared contract suite (`describeCommerceGatewayContract` in
- * `commerce-gateway.contract.ts`), and nothing upstream of the gateway —
- * capabilities, Finding Policy, Support MCP — has to change.
+ * Read-only gateway to the commerce platform (ADR-0005). The fixture gateway
+ * is the only implementation. A live adapter has to implement these methods
+ * and pass `describeCommerceGatewayContract`; nothing upstream changes.
  */
 export interface CommerceGateway {
   getOrder(orderId: string): Promise<RawOrder>;

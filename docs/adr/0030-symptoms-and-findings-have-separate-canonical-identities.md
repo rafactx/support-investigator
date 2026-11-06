@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Symptoms and findings have separate canonical identities
 
 An investigation records what was observed as a Symptom Code and what the evidence established as a separate Finding Code. Natural-language hypotheses remain useful explanations, but they are not identities for review, evaluation or aggregation; exact-string grouping would fragment the same cause and allow model wording to redefine the taxonomy at runtime. A specific Finding Code requires supporting operational evidence, otherwise the result is `ROOT_CAUSE_UNDETERMINED`.

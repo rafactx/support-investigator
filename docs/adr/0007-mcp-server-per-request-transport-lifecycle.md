@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0039
+---
+
 # Support MCP's Streamable HTTP transport: fresh `McpServer` + `StreamableHTTPServerTransport` per HTTP request, not one long-lived pair
 
 > **Status: superseded for the target architecture by ADR-0039.** This remains the record of the correct workaround for the implemented MCP TypeScript SDK v1 prototype. The focused slice migrates to the v2 server and Hono packages, whose `createMcpHandler` owns the per-request stateless Web Standard transport lifecycle.
@@ -8,4 +12,4 @@ The SDK's own `dist/esm/examples/server/simpleStatelessStreamableHttp.js` does s
 
 We adopted the per-request pattern (`src/mcp/server.ts`) rather than debugging why the persistent-transport form breaks internally. Two reasons: it's what the SDK's own maintainers ship as the reference implementation for stateless mode, and it's *also* what the Lambda deployment needs regardless — a Lambda invocation cannot rely on any state (including an already-connected transport) surviving between invocations. Building the CLI/local-dev server around the same lifecycle now means the Lambda deployment reuses `startSupportMcpHttpServer`'s request-handling shape almost unchanged instead of needing a second implementation for Lambda.
 
-This is the ticket's central, previously-unproven technical risk resolved: Strands' `McpClient` **does** work against a real Support MCP server over Streamable HTTP — provided the server-side transport lifecycle matches the SDK's stateless pattern.
+This resolves the main unproven technical risk of the MCP integration: Strands' `McpClient` **does** work against a real Support MCP server over Streamable HTTP — provided the server-side transport lifecycle matches the SDK's stateless pattern.

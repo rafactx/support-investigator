@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { chunkText } from './chunk.ts';
 
-// Independent source of truth: the knowledge-base requirement — "chunks and embeds them into a frozen index.json".
-// The spec names chunking as a required step but doesn't pin an exact
-// size, so these tests assert the properties any reasonable chunker must
+// The knowledge-base pipeline chunks documents before embedding them into
+// the frozen index.json. No exact chunk size is part of that contract, so
+// these tests assert the properties any reasonable chunker must
 // hold (no data lost, no oversized chunk, no empty chunk) rather than a
 // specific chunk count derived from the implementation itself.
 

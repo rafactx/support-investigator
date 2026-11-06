@@ -255,25 +255,15 @@ function ReviewHistoryItem({ review }: { review: Review }) {
 }
 
 /**
- * Renders a Current Investigation: intake with
- * per-field provenance, Ledger Facts, the Evidence Contract Result, the
- * automated Finding, the Investigation Decision with its Decision Reason,
- * and the deterministic Source Pack explanation — with an explicit note
- * that none of this is a Ticket Status change (ADR-0037). A capability
- * failure renders as its own callout precisely where an empty ledger
- * would otherwise read as "nothing happened".
+ * A Current Investigation: intake provenance, Ledger Facts, the Evidence
+ * Contract Result, the Finding, the Investigation Decision and the
+ * deterministic explanation. A capability failure gets its own callout so an
+ * empty ledger does not read as "nothing happened".
  *
- * `onImproveExplanation` is an explicit operator action, only
- * offered for a `completed` Investigation: it never fires automatically,
- * and the deterministic explanation above it never disappears regardless
- * of whether the request is accepted, rejected for an unsupported claim,
- * or Language Assistance itself is unavailable — all three render as an
- * addition below the deterministic explanation, never a replacement of it.
- *
- * `onSubmitReview` is the same shape of explicit operator
- * action, offered only for a `completed` Investigation: appending a review
- * never rewrites `finding.code` above (AC3) — only `reviewedFinding` and
- * the append-only history below it change.
+ * `onImproveExplanation` and `onSubmitReview` are offered only for a
+ * completed Investigation. An improved explanation is shown below the
+ * deterministic one, never in its place, and a review never changes
+ * `finding.code`.
  */
 export function InvestigationDetail({
   investigation,
@@ -361,7 +351,7 @@ export function InvestigationDetail({
               // yet confirmed, corrected or marked inconclusive" — once the
               // latest review is inconclusive, it no longer fits that
               // definition, even though it's still ineligible for the CX
-              // Intelligence Loop (AC5).
+              // Intelligence Loop.
               <Badge tone="warning">
                 <CircleDashed aria-hidden="true" />
                 Inconclusive review

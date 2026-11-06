@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0046
+---
+
 # `pnpm insights` reads persisted `final`-only eval reports from disk, gitignored, no dedupe across sources
 
 Building `pnpm insights` required deciding what "`pnpm insights` reads the structured outputs already produced by `pnpm evals` / `pnpm evals:live` runs" actually means in code — neither command persisted anything before this; both only printed a report to the console (`run-evals.ts`/`run-evals-live.ts`'s `printReport`). Two ways to close that gap were available: have `insights` re-run the agent against the golden tickets itself, or have the two existing eval entrypoints write their results to disk and have `insights` read them back. We chose the second. Re-running the agent would have duplicated `runEvalSuite`'s own orchestration inside a third command and contradicts `ADR-0004`'s explicit boundary ("no new ML or analytics infrastructure... rather than building new... infrastructure") — `insights` is aggregation over already-produced data, not a third way to produce it.

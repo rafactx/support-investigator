@@ -5,7 +5,7 @@ import { z } from 'zod';
  * factories so a runtime can validate the setting without importing every
  * provider's SDK (the Cloudflare Worker never bundles Bedrock).
  */
-export const LanguageModelProviderSchema = z.enum(['bedrock', 'workers-ai', 'fake']);
+const LanguageModelProviderSchema = z.enum(['bedrock', 'workers-ai', 'fake']);
 export type LanguageModelProvider = z.infer<typeof LanguageModelProviderSchema>;
 
 export function parseLanguageModelProvider(

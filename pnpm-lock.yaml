@@ -11,9 +11,6 @@ importers:
       '@ai-sdk/amazon-bedrock':
         specifier: 5.0.36
         version: 5.0.36(zod@4.4.3)
-      '@ai-sdk/provider':
-        specifier: 4.0.4
-        version: 4.0.4
       '@aws-sdk/client-bedrock-runtime':
         specifier: 3.1095.0
         version: 3.1095.0

@@ -5,24 +5,14 @@ import { DEFAULT_INDEX_PATH } from './load-index.ts';
 import { loadSupportArticles, SUPPORT_ARTICLES_DIR } from './support-articles.ts';
 
 /**
- * `pnpm kb:refresh`: loads every
- * committed support runbook under `src/kb/articles/`, chunks and embeds
- * them via the `EMBED_PROVIDER`-selected `EmbedProvider`, and writes the
- * frozen `KnowledgeIndex` to `data/index.json` — versioned in git so
- * content drift is reviewable in a diff, not silent.
+ * `pnpm kb:refresh`: chunks and embeds `src/kb/articles/` with the
+ * `EMBED_PROVIDER`-selected provider and writes `data/index.json`, which is
+ * committed so content changes show up in review.
  *
- * The committed index is built with the default `EMBED_PROVIDER=lexical`
- * (deterministic hashing bag-of-words, zero network), so anyone can
- * reproduce it byte-for-byte apart from `builtAt`.
- * `search_support_knowledge` always queries with the provider recorded in
- * the index (ADR-0009), so switching to semantic embeddings is a rebuild,
- * not a code change: `EMBED_PROVIDER=workers-ai pnpm kb:refresh` (with
- * `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`, for the Cloudflare
- * Worker) or `EMBED_PROVIDER=bedrock-titan pnpm kb:refresh` (for the
- * reference AWS deployment).
- *
- * Orchestration only: loading is `support-articles.ts`, the chunk/embed
- * step is the pure, unit-tested `buildKnowledgeIndex`.
+ * The committed index uses `lexical` (no network), so it is reproducible apart
+ * from `builtAt`. Queries use the provider recorded in the index (ADR-0009),
+ * so switching to `workers-ai` or `bedrock-titan` is a rebuild, not a code
+ * change.
  */
 async function main(): Promise<void> {
   const docs = loadSupportArticles();

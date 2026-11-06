@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Fixture-first CommerceGateway; a live adapter is a seam, not an assumption
 
 Real commerce-platform sandboxes are rarely self-service: access usually needs a partner agreement or a merchant account, and nobody evaluating this project can be assumed to have one. `CommerceGateway` is therefore an interface whose only shipped implementation is a fixture (`createFixtureCommerceGateway`) serving the Public Reference Scenarios with realistic, self-designed raw payloads — order, inventory, simulation, warehouse, dock, shipping-policy and coverage-zone records (`src/domain/*-record.ts`). This keeps the project reproducible in two commands (`pnpm install && pnpm dev`) with no credentials and no network.

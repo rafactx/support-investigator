@@ -1,8 +1,8 @@
 # Demo script (3 minutes)
 
-The demo runs the resource-oriented Fulfillment Investigation — the sole first-party investigation workflow. Three cases, run in this order, each proving a different claim from `CONTEXT.md`/`docs/adr/`: the Fulfillment Playbook and Finding Policy decide deterministically on satisfied evidence, Language Assistance proposes intake without ever deciding for N2 (ADR-0043/0044), and the test suite is a real CI gate, not theater. Request/response shapes below are copied verbatim from `src/api/investigations-app.test.ts` — `docs/demo-script.test.ts` asserts this file never drifts from that source.
+Three cases, run in order, each showing one claim: the Fulfillment Playbook and Finding Policy decide deterministically on satisfied evidence, Language Assistance proposes intake without deciding for N2 (ADR-0043/0044), and the test suite fails when a policy rule breaks. The request shapes match `src/api/investigations-app.test.ts`, and `docs/demo-script.test.ts` checks the field names used here.
 
-Run everything from the repo root, after `pnpm install`. No platform or model credentials are required for any of the three cases — all three run against the fixture `CommerceGateway`. Case 2 calls a model only when you start the server with `LANGUAGE_MODEL_PROVIDER=bedrock` (and AWS credentials); with the default `fake` provider nothing is proposed, and the outcome is the same `awaiting_input`.
+Run everything from the repo root, after `pnpm install`. No platform or model credentials are required for any of the three cases — all three run against the fixture `CommerceGateway`. Case 2 calls a model only when you start the server with `LANGUAGE_MODEL_PROVIDER=workers-ai` or `LANGUAGE_MODEL_PROVIDER=bedrock` and matching credentials; with the default `fake` provider nothing is proposed, and the outcome is the same `awaiting_input`.
 
 Start the local Investigations API first, in its own terminal:
 
@@ -12,7 +12,7 @@ pnpm dev serve   # POST /investigations, GET /investigations/:id on :8787
 
 ## Case 1 — Satisfied contract, ready for human resolution (~45s)
 
-The flagship demo case named in `ADR-0006`: stock exists, but zero delivery options for the requested destination — and the full evidence-driven route (inventory → simulation → warehouse-to-dock → dock-to-policy → destination coverage) confirms no applicable shipping-policy coverage.
+The reference scenario: stock exists, but there are zero delivery options for the destination, and the full route (inventory → simulation → warehouse-to-dock → dock-to-policy → destination coverage) confirms no shipping policy covers it.
 
 ```bash
 curl -s -X POST http://localhost:8787/investigations \
@@ -29,11 +29,11 @@ curl -s -X POST http://localhost:8787/investigations \
 
 **Expected outcome:** `state: "completed"`, `evidence.contractResult: "satisfied"` (5 Ledger Facts, none contradicting), `finding.code: "DESTINATION_NOT_COVERED"`, `decision.outcome: "ready_for_human_resolution"`, `decision.reason: "contract_satisfied"`. No `mcpClient` in this app's own deps (asserted in `investigations-app.test.ts`) — the Fulfillment Playbook calls the 5 Operational Capabilities directly.
 
-**Talking point:** point at `finding` and `decision` in the response and note there is no `proposed`/model-authored field anywhere in it — the Finding Policy is a pure function over the Evidence Ledger, nothing here was a model's guess.
+**Talking point:** `finding` and `decision` have no model-authored field. The Finding Policy is a pure function over the Evidence Ledger.
 
 ## Case 2 — Language Assistance proposes, N2 still has to confirm (~45s)
 
-Proves Language Assistance's boundary (ADR-0043/0044): a model-extracted field is never pre-confirmed, so a ticket-text-only request can never resume the Playbook by itself, no matter how complete the proposal is.
+A model-extracted field is never pre-confirmed, so a ticket-text-only request cannot resume the Playbook, however complete the proposal is.
 
 ```bash
 curl -s -X POST http://localhost:8787/investigations \
@@ -47,11 +47,11 @@ curl -s -X POST http://localhost:8787/investigations \
 
 **Expected outcome:** `state: "awaiting_input"`, always — never `"completed"`. With a real provider, Language Assistance extracts `skuId`/`seller`/`quantity`/`destinationPostalCode` from the ticket text, but every one comes back `{ source: "model", confirmed: false }` and lands in `intakeGaps` with `reason: "unconfirmed"`. The Fulfillment Playbook's capabilities are never invoked (`capabilities.inventory.observe` — 0 calls, asserted in `investigations-app.test.ts`). With the `fake` provider the same fields land in `intakeGaps` as `missing` instead.
 
-**Talking point:** contrast with Case 1 — Case 1's `skuId` was `{ source: "user", confirmed: true }`, explicit and immediately usable; Case 2's is `{ source: "model", confirmed: false }`, a proposal N2 must explicitly confirm (`PATCH /investigations/:id/intake`, not shown here) before the same deterministic Playbook from Case 1 runs. The model never gets to skip that step.
+**Talking point:** Case 1's `skuId` was `{ source: "user", confirmed: true }`. Case 2's is `{ source: "model", confirmed: false }`, which N2 has to confirm through `PATCH /investigations/:id/intake` before the Playbook runs.
 
 ## Case 3 — CI goes red on purpose (~60s)
 
-Proves the test suite isn't theater — entirely offline, no credentials.
+Offline, no credentials.
 
 1. Break exactly one Finding Policy rule on purpose — a destination a coverage zone already covers stops contradicting the positive Finding (`src/domain/finding-policy.ts`, `evaluateFindingPolicy`'s contradiction switch):
 
@@ -90,7 +90,7 @@ Proves the test suite isn't theater — entirely offline, no credentials.
     Test Files  1 failed | ...
    ```
 
-   `pnpm test` exits non-zero — the same command `.github/workflows/ci.yml`'s `gate` job runs, so a PR carrying this change would show a red check, not a green one.
+   `pnpm test` exits non-zero. The `ci` job in `.github/workflows/ci.yml` runs the same command, so a pull request with this change fails its required check.
 
 3. Revert the sabotage before doing anything else:
 
@@ -99,11 +99,11 @@ Proves the test suite isn't theater — entirely offline, no credentials.
    pnpm test   # back to green
    ```
 
-**Talking point:** a covered destination silently stopped being disqualifying — exactly the kind of one-line regression that would otherwise ship a wrong Finding Code to a real N2 reviewer. `src/domain/finding-policy.test.ts` catches it because it's an ordinary part of `pnpm test`, not a separately-run, easy-to-forget eval script.
+**Talking point:** a one-line change made a covered destination stop contradicting the Finding, which would show N2 a wrong Finding Code. `src/domain/finding-policy.test.ts` catches it as part of `pnpm test`.
 
-## Required post-demo step: `cdk destroy`
+## Required after an AWS demo: `cdk destroy`
 
-**Do not skip this.** The live stack exists only for the demo window (`ADR-0002`) and `/mcp` is guarded by a shared-secret header, not obscurity — leaving it up after the demo is a live, indefinitely-scannable API Gateway endpoint. Run the full teardown in `docs/runbooks/cdk-destroy.md` (`pnpm cdk destroy`, verify the stack is gone, optionally delete the demo-key SSM parameter) immediately after the demo, every time.
+The AWS stack exists only for the demo window (ADR-0002), and its routes are guarded by a shared-secret header. Run the teardown in `docs/runbooks/cdk-destroy.md` right after every AWS demo. The Cloudflare live demo is not torn down.
 
 ## Reference AWS deployment
 
@@ -131,6 +131,6 @@ aws cloudformation describe-stacks --stack-name SupportInvestigatorStack --regio
   --query "Stacks[0].Outputs[?OutputKey=='SupportMcpUrl'].OutputValue" --output text
 ```
 
-Any Streamable HTTP MCP client — a third party's own, or the official MCP SDK client `src/mcp/server.test.ts` uses locally — can connect to that URL with `x-demo-key: <value from above>` to prove it's a real deployment, not just `cdk synth` output. `pnpm dev inventory`/`simulate-fulfillment`/`search-knowledge` always start and connect to their own local Support MCP server (no env override to point them at a deployed one) — they're a local capability demo, not a live-deployment proof.
+Any Streamable HTTP MCP client can connect to that URL with `x-demo-key: <value from above>`. The `pnpm dev inventory`, `simulate-fulfillment` and `search-knowledge` commands always use a local Support MCP server, not a deployed one.
 
-For the complete repeatable deployed release run, export those two values as `SUPPORT_INVESTIGATOR_API_URL` / `SUPPORT_INVESTIGATOR_DEMO_KEY` and run `pnpm smoke:deployed`. It exercises the focused synthetic cases, durable review readback and authenticated MCP v2 discovery; see [`docs/release-evidence.md`](./release-evidence.md) for the exact claims and skip semantics.
+For the complete repeatable deployed release run, export those two values as `SUPPORT_INVESTIGATOR_API_URL` / `SUPPORT_INVESTIGATOR_DEMO_KEY` and run `pnpm smoke:deployed`. It exercises the focused synthetic cases, durable review readback and authenticated MCP discovery; see [`docs/release-evidence.md`](./release-evidence.md) for the exact claims and skip semantics.

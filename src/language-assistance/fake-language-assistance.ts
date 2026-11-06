@@ -10,29 +10,19 @@ import type {
 export type FakeExtractionScript = (request: IntakeExtractionRequest) => IntakeExtractionResult;
 export type FakeExplanationScript = (request: ExplanationImprovementRequest) => ExplanationImprovementResult;
 
-/** The default `explanationScript` when a caller passes only the older single-arg form — degrades the same way `NO_OP_LANGUAGE_ASSISTANCE` does, never silently "succeeding" with an unrequested script. */
+/** Used when no `explanationScript` is passed: explanation improvement reports unavailable. */
 const DEFAULT_EXPLANATION_SCRIPT: FakeExplanationScript = () => ({
   kind: 'unavailable',
   reason: 'no explanation script configured',
 });
 
 /**
- * A deterministic, no-network Language Assistance fake for tests and CI
- * ("a deterministic fake Language Assistance implementation
- * keeps normal CI credential-free"). Unlike `FakeScriptedModel`
- * (`src/evals/fake-model.ts`), this fake is shaped around this port's own
- * `IntakeExtractionRequest`/`Result` and `ExplanationImprovementRequest`/
- * `Result` contracts, not Strands' streaming event protocol — the two are
- * not interchangeable.
+ * A deterministic, no-network Language Assistance for tests and CI.
  *
- * `script` receives the exact request (ticket text and the fields still
- * needed) so a caller can script a deliberate miss (omit a field), an
- * ambiguous case (also omit it — Language Assistance never guesses) or an
- * invented identifier (a value absent from the ticket text) per labeled
- * eval ticket. `explanationScript` is optional and separate —
- * every existing single-arg call site keeps compiling and degrades to
- * `unavailable` for `improveExplanation` rather than acquiring an
- * unrequested behavior.
+ * `script` receives the request (ticket text and the fields still needed), so
+ * a caller can script a miss or ambiguity (omit the field) or an invented
+ * identifier (a value absent from the ticket text). Without
+ * `explanationScript`, `improveExplanation` reports unavailable.
  */
 export function createFakeLanguageAssistance(
   script: FakeExtractionScript,
@@ -62,7 +52,7 @@ export function fixedFieldsScript(fields: ExtractedIntakeFields): FakeExtraction
   };
 }
 
-/** Reports Language Assistance as unavailable regardless of the request — for AC7's "usable when Bedrock is unavailable" tests. */
+/** Reports Language Assistance as unavailable regardless of the request — for degraded-mode tests. */
 export function unavailableScript(reason = 'Language Assistance is unavailable'): FakeExtractionScript {
   return () => ({ kind: 'unavailable', reason });
 }
@@ -84,7 +74,7 @@ export function groundedImprovementScript(
   });
 }
 
-/** Reports explanation improvement as unavailable regardless of the request — for AC7's "Bedrock failure" tests. */
+/** Reports explanation improvement as unavailable regardless of the request — for model-failure tests. */
 export function explanationUnavailableScript(reason = 'Language Assistance is unavailable'): FakeExplanationScript {
   return () => ({ kind: 'unavailable', reason });
 }

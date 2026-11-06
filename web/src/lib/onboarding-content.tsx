@@ -15,10 +15,9 @@ import {
 } from 'lucide-react';
 
 /**
- * All copy for the onboarding Drawer (`ADR-0025`), pulled into one place so
- * the components stay presentational. Every claim here traces to a real
- * file or ADR in this repo — nothing is aspirational except `ROADMAP_GROUPS`,
- * which is explicitly labeled as such in the Roadmap tab itself.
+ * Copy for the onboarding Drawer (ADR-0025). Every claim traces to a file or
+ * ADR in this repo, except `ROADMAP_GROUPS`, which the Roadmap tab labels as
+ * future work.
  */
 
 export interface FlowStep {
@@ -30,12 +29,7 @@ export interface FlowStep {
   reference: string;
 }
 
-/**
- * The resource-oriented Fulfillment Investigation pipeline (the
- * cutover: intake → confirm → deterministic Playbook → Finding Policy →
- * Investigation Decision), replacing the retired `ticket → proposed → policy
- * gate → final` prototype flow.
- */
+/** Intake, confirmation, Fulfillment Playbook, Finding Policy, Investigation Decision. */
 export const FLOW_STEPS: FlowStep[] = [
   {
     id: 'intake',
@@ -84,7 +78,7 @@ export const FLOW_STEPS: FlowStep[] = [
     summary:
       'What the operator can do next — never a claim that a ticket was resolved.',
     detail:
-      'ready_for_human_resolution when the contract is satisfied; needs_input when a required value is missing or unconfirmed; requires_specialist_review when a capability failed or evidence stayed insufficient/contradictory. A deterministic Finding Source Pack explanation is always included; an improved, Bedrock-generated explanation is a separate, explicit operator request.',
+      'ready_for_human_resolution when the contract is satisfied; needs_input when a required value is missing or unconfirmed; requires_specialist_review when a capability failed or evidence stayed insufficient/contradictory. A deterministic Finding Source Pack explanation is always included; a model-improved explanation is a separate, explicit operator request.',
     reference: 'ADR-0037/0038',
   },
 ];
@@ -95,7 +89,6 @@ export interface ArchitectureLayer {
   icon: ReactElement;
 }
 
-/** README's own architecture summary, reworded for a scannable list instead of an ASCII diagram. */
 export const ARCHITECTURE_LAYERS: ArchitectureLayer[] = [
   {
     label: 'React/Vite SPA',
@@ -106,17 +99,17 @@ export const ARCHITECTURE_LAYERS: ArchitectureLayer[] = [
   {
     label: 'Investigations API',
     detail:
-      'Hono. The resource-oriented Investigation contract — the sole first-party investigation workflow.',
+      'Hono. The resource-oriented Investigation contract.',
     icon: <Globe aria-hidden="true" />,
   },
   {
     label: 'Fulfillment Playbook → Finding Policy',
     detail:
-      'Deterministic TypeScript, zero model authority — the only thing with final say over the Finding Code and Investigation Decision.',
+      'Deterministic TypeScript. The only thing that sets the Finding Code and Investigation Decision.',
     icon: <Cog aria-hidden="true" />,
   },
   {
-    label: 'Language Assistance (AI SDK Core → Bedrock)',
+    label: 'Language Assistance (AI SDK → Workers AI or Bedrock)',
     detail:
       'Bounded, degradable: proposes intake fields from ticket text, or improves a deterministic explanation on explicit request. Never authors a Ledger Fact or a Finding.',
     icon: <Sparkles aria-hidden="true" />,
@@ -124,13 +117,13 @@ export const ARCHITECTURE_LAYERS: ArchitectureLayer[] = [
   {
     label: 'Support MCP',
     detail:
-      'Lambda, Streamable HTTP (ADR-0007). An external adapter exposing the same 5 capabilities plus documentary search over the commerce-platform gateway — fixture by default, live behind an opt-in env var (ADR-0005) — not an internal hop the first-party runner takes.',
+      'Streamable HTTP at /mcp (ADR-0007). An adapter that exposes the same 5 capabilities plus documentary search to any MCP client. The API never calls it (ADR-0039).',
     icon: <Plug aria-hidden="true" />,
   },
   {
     label: 'Knowledge Index',
     detail:
-      'Frozen, git-committed embeddings built once by pnpm kb:refresh from a curated set of commerce-platform docs. Optional documentary search only — no path to a Ledger Fact, a citation, or a Finding.',
+      'A committed index built by pnpm kb:refresh from the support articles in src/kb/articles. Documentary search only: it cannot produce a Ledger Fact or a Finding.',
     icon: <BookOpen aria-hidden="true" />,
   },
 ];
@@ -147,11 +140,7 @@ export interface RoadmapGroup {
   items: RoadmapItem[];
 }
 
-/**
- * Speculative, out-of-the-box next steps — clearly labeled as such in the
- * Roadmap tab's own heading. Each one is anchored to a real seam or a gap
- * this project's own ADRs already name, not invented from nothing.
- */
+/** Possible next steps, each tied to a seam or gap an ADR already names. */
 export const ROADMAP_GROUPS: RoadmapGroup[] = [
   {
     category: 'Trust & auditability',
@@ -161,12 +150,7 @@ export const ROADMAP_GROUPS: RoadmapGroup[] = [
       {
         title: 'CX Intelligence Loop',
         detail:
-          'Relating reviewed Findings to customer-support patterns (recurrence, transfers, satisfaction) is the required second product slice, deliberately out of the decision path of any individual investigation.',
-      },
-      {
-        title: 'Durable, deployed persistence',
-        detail:
-          "The deployed stack still serves the in-memory repository today; migrating the API Lambda to DynamoDB-backed Investigations, with a stable resource URL surviving Lambda lifecycle changes, is the next step.",
+          'Relating reviewed Findings to support patterns (recurrence, transfers, satisfaction) is the second planned slice (ADR-0027). It stays out of the decision path of any single investigation.',
       },
     ],
   },
@@ -178,12 +162,12 @@ export const ROADMAP_GROUPS: RoadmapGroup[] = [
       {
         title: 'Additional Symptom Codes',
         detail:
-          'The Fulfillment Playbook covers exactly one Symptom Code today (STOCK_WITHOUT_DELIVERY_OPTIONS). Each new symptom needs its own Operational Capabilities and Evidence Contracts, deliberately not generalized ahead of a second real case.',
+          'The Fulfillment Playbook covers one Symptom Code (STOCK_WITHOUT_DELIVERY_OPTIONS). Each new symptom needs its own capabilities and Evidence Contracts, so the playbook is not generalized before a second real case.',
       },
       {
         title: 'Streaming Investigation Progress',
         detail:
-          'The SPA polls the finished resource today. A running investigation calling multiple capabilities could stream Investigation Progress over SSE, so the operator sees "checking inventory… simulating fulfillment…" live instead of one loading state.',
+          'The API answers once the investigation finishes. Streaming progress over SSE would show each capability call as it happens instead of one loading state.',
       },
     ],
   },
@@ -195,12 +179,7 @@ export const ROADMAP_GROUPS: RoadmapGroup[] = [
       {
         title: 'Bulk ticket intake',
         detail:
-          'The intake form handles one investigation at a time. Support queues arrive in batches — a CSV/paste-many flow that runs buildIntake per row is a direct extension of the existing single-investigation seam.',
-      },
-      {
-        title: 'Multi-language tickets',
-        detail:
-          'The Knowledge Index and Language Assistance extraction are English-only today. Merchants operate across Latin America, so ticket text arriving in Portuguese or Spanish is a realistic, near-term extension of the same intake seam.',
+          'The intake form handles one investigation at a time. A paste-many or CSV flow could run buildIntake per row.',
       },
     ],
   },
