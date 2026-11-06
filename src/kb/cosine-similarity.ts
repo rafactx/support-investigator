@@ -13,9 +13,9 @@ export function cosineSimilarity(a: readonly number[], b: readonly number[]): nu
   let magnitudeA = 0;
   let magnitudeB = 0;
   for (let i = 0; i < a.length; i++) {
-    dot += a[i]! * b[i]!;
-    magnitudeA += a[i]! * a[i]!;
-    magnitudeB += b[i]! * b[i]!;
+    dot += a[i] * b[i];
+    magnitudeA += a[i] * a[i];
+    magnitudeB += b[i] * b[i];
   }
 
   const denominator = Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB);

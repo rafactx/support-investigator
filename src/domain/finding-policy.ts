@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const LEDGER_FACT_SCHEMA_VERSION = '1';
+const LEDGER_FACT_SCHEMA_VERSION = '1';
 export const FINDING_POLICY_VERSION = '1';
 
 const AccountScopeSchema = z.strictObject({ accountId: z.string().min(1) });
@@ -52,7 +52,7 @@ const DestinationCoverageFactSchema = FactEnvelopeSchema.extend({
   covered: z.boolean(),
 });
 
-export const LedgerFactSchema = z.discriminatedUnion('kind', [
+const LedgerFactSchema = z.discriminatedUnion('kind', [
   InventoryFactSchema,
   SymptomReproductionFactSchema,
   WarehouseToDockFactSchema,

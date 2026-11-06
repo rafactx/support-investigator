@@ -47,7 +47,7 @@ export function readLanguageAssistanceTimeoutMs(
  * a handful of intake fields, or one paragraph plus citations.
  */
 export const INTAKE_EXTRACTION_MAX_OUTPUT_TOKENS = 300;
-export const EXPLANATION_IMPROVEMENT_MAX_OUTPUT_TOKENS = 700;
+const EXPLANATION_IMPROVEMENT_MAX_OUTPUT_TOKENS = 700;
 
 const FIELD_SCHEMAS: Record<ExtractableIntakeField, z.ZodTypeAny> = {
   skuId: z.string().min(1),

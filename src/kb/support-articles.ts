@@ -23,7 +23,7 @@ export const SUPPORT_ARTICLES_DIR = fileURLToPath(new URL('./articles/', import.
 export const SUPPORT_ARTICLE_BASE_URL = 'https://docs.example.com/runbooks/';
 
 /** The canonical URL of the runbook stored as `articles/<slug>.md`. */
-export function supportArticleUrl(slug: string): string {
+function supportArticleUrl(slug: string): string {
   return `${SUPPORT_ARTICLE_BASE_URL}${slug}`;
 }
 

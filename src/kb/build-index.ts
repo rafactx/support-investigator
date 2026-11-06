@@ -52,7 +52,7 @@ export async function buildKnowledgeIndex(
         chunk.text.length > EXCERPT_CHARS
           ? `${chunk.text.slice(0, EXCERPT_CHARS)}…`
           : chunk.text,
-      embedding: embeddings[i]!,
+      embedding: embeddings[i],
     })),
   };
 }

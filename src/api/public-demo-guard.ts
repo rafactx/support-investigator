@@ -45,7 +45,7 @@ export function readPublicDemoLimits(env: NodeJS.ProcessEnv = process.env): Publ
 }
 
 /** Request bodies beyond this are rejected before parsing — far above any legitimate request. */
-export const MAX_REQUEST_BODY_BYTES = 32 * 1024;
+const MAX_REQUEST_BODY_BYTES = 32 * 1024;
 
 export interface PublicDemoGuardLogEntry {
   readonly event: 'rate_limited' | 'request_too_large' | 'demo_key_rejected';
