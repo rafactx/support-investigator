@@ -2,7 +2,7 @@
 
 ## Setup
 
-Requires Node.js 22+ and pnpm (the version is pinned in `package.json`; `corepack enable` picks it up).
+Requires Node.js 22+ and pnpm (the version is pinned in the `packageManager` field of `package.json`).
 
 ```bash
 pnpm install
