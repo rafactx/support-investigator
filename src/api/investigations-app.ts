@@ -8,6 +8,7 @@ import {
   evaluateIntakeReadiness,
   modelProposed,
   SUPPORTED_SYMPTOM_CODE,
+  userConfirmed,
   type ExplanationImprovementOutcome,
   type FulfillmentIntake,
   type HumanReview,
@@ -148,10 +149,6 @@ function createFingerprint(request: CreateInvestigationRequest): string {
   ]);
 }
 
-function userField<T>(value: T): IntakeField<T> {
-  return { value, source: 'user', confirmed: true };
-}
-
 function proposedField<T>(value: T | undefined): IntakeField<T> | undefined {
   return value !== undefined ? modelProposed(value) : undefined;
 }
@@ -183,13 +180,13 @@ export async function buildIntake(
 
   return {
     symptomCode: SUPPORTED_SYMPTOM_CODE,
-    accountScope: request.accountScope ? userField({ accountId: request.accountScope.accountId }) : undefined,
-    skuId: request.skuId !== undefined ? userField(request.skuId) : proposedField(proposedFields.skuId),
-    seller: request.seller !== undefined ? userField(request.seller) : proposedField(proposedFields.seller),
-    quantity: request.quantity !== undefined ? userField(request.quantity) : proposedField(proposedFields.quantity),
+    accountScope: request.accountScope ? userConfirmed({ accountId: request.accountScope.accountId }) : undefined,
+    skuId: request.skuId !== undefined ? userConfirmed(request.skuId) : proposedField(proposedFields.skuId),
+    seller: request.seller !== undefined ? userConfirmed(request.seller) : proposedField(proposedFields.seller),
+    quantity: request.quantity !== undefined ? userConfirmed(request.quantity) : proposedField(proposedFields.quantity),
     destinationPostalCode:
       request.destinationPostalCode !== undefined
-        ? userField(request.destinationPostalCode)
+        ? userConfirmed(request.destinationPostalCode)
         : proposedField(proposedFields.destinationPostalCode),
   };
 }
@@ -403,7 +400,7 @@ function mergeConfirmableField<T>(
   confirmSet: ReadonlySet<ExtractableIntakeField>,
 ): IntakeField<T> | undefined {
   if (explicitValue !== undefined) {
-    return userField(explicitValue);
+    return userConfirmed(explicitValue);
   }
   if (confirmSet.has(field) && currentField) {
     return { ...currentField, confirmed: true };
@@ -415,7 +412,7 @@ function mergeIntake(current: FulfillmentIntake, request: PatchIntakeRequest): F
   const confirmSet = new Set<ExtractableIntakeField>(request.confirm ?? []);
   return {
     symptomCode: current.symptomCode,
-    accountScope: request.accountScope ? userField({ accountId: request.accountScope.accountId }) : current.accountScope,
+    accountScope: request.accountScope ? userConfirmed({ accountId: request.accountScope.accountId }) : current.accountScope,
     skuId: mergeConfirmableField('skuId', request.skuId, current.skuId, confirmSet),
     seller: mergeConfirmableField('seller', request.seller, current.seller, confirmSet),
     quantity: mergeConfirmableField('quantity', request.quantity, current.quantity, confirmSet),

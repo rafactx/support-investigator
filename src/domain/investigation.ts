@@ -21,7 +21,7 @@ export interface IntakeField<T> {
   readonly confirmed: boolean;
 }
 
-function userConfirmed<T>(value: T): IntakeField<T> {
+export function userConfirmed<T>(value: T): IntakeField<T> {
   return { value, source: 'user', confirmed: true };
 }
 
@@ -38,11 +38,8 @@ export function modelProposed<T>(value: T): IntakeField<T> {
 export const SUPPORTED_SYMPTOM_CODE = 'STOCK_WITHOUT_DELIVERY_OPTIONS' as const;
 
 /**
- * Every field is optional at the type level because Investigation Intake
- * may begin from ticket text, partial structured input, or both: a
- * required value can be genuinely absent, not just unconfirmed. `evaluateIntakeReadiness` is the single place that turns
- * "some fields absent or unconfirmed" into either a ready confirmed intake
- * or a list of gaps — nothing else in this module re-derives readiness.
+ * Every field is optional because intake may start from ticket text, partial
+ * structured input, or both.
  */
 export interface FulfillmentIntake {
   readonly symptomCode: typeof SUPPORTED_SYMPTOM_CODE;
@@ -72,15 +69,7 @@ export type IntakeReadiness =
   | { readonly kind: 'ready'; readonly confirmed: ConfirmedFulfillmentIntake }
   | { readonly kind: 'awaiting_input'; readonly gaps: readonly IntakeGap[] };
 
-/**
- * The single narrowing seam between a possibly-incomplete
- * `FulfillmentIntake` and the fully-confirmed shape the Fulfillment
- * Playbook requires. Account Scope has no special case here beyond being
- * one of the required fields — it reaches this function only ever as
- * `source: 'user'` because nothing that builds a `FulfillmentIntake` from
- * ticket text is allowed to populate it.
- */
-/** Narrows a field already proven present by the caller's own gap check, rather than casting past the type. */
+/** Narrows a field the gap check already proved present. */
 function requireFieldValue<T>(field: IntakeField<T> | undefined, name: IntakeFieldName): T {
   if (!field) {
     throw new Error(`Unreachable: evaluateIntakeReadiness already verified "${name}" is present.`);
@@ -88,6 +77,10 @@ function requireFieldValue<T>(field: IntakeField<T> | undefined, name: IntakeFie
   return field.value;
 }
 
+/**
+ * The one place that turns a possibly incomplete intake into either the
+ * confirmed shape the Fulfillment Playbook requires or a list of gaps.
+ */
 export function evaluateIntakeReadiness(
   investigationId: string,
   intake: FulfillmentIntake,
@@ -119,13 +112,7 @@ export function evaluateIntakeReadiness(
   };
 }
 
-/**
- * Builds a `FulfillmentIntake` where every field is explicit and
- * user-confirmed ("confirmed Account Scope, SKU, seller, quantity and
- * destination values"). A model proposing any of these fields, with
- * `source: 'model'` and `confirmed: false` until N2 confirms it, is handled
- * by the intake flow instead.
- */
+/** A `FulfillmentIntake` where every field is supplied and confirmed by the user. */
 export function confirmedUserIntake(input: {
   readonly accountId: string;
   readonly skuId: string;
@@ -154,29 +141,15 @@ export function confirmedUserIntake(input: {
 export type InvestigationState = 'awaiting_input' | 'completed' | 'failed';
 
 /**
- * `POST /investigations/:id/explanations`'s outcome:
- * `accepted` means the model's proposal passed the grounding check and
- * `improvedExplanation` is now the improved-on-request explanation;
- * `rejected` means an unsupported claim or citation was caught and the
- * deterministic `InvestigationOutcome.explanation` is what N2 still sees —
- * this type never has a variant for "Bedrock unavailable" because that
- * case never reaches the Investigation Audit Trail at all (it short-circuits
- * the route before any command is committed, so a retry is a fresh attempt,
- * not a stale-revision idempotent replay of a failure).
+ * `rejected` means the grounding check caught an unsupported claim or
+ * citation and the deterministic explanation stands. A model failure is not
+ * recorded here; the route returns 503 without committing anything.
  */
 export type ExplanationImprovementOutcome =
   | { readonly status: 'accepted'; readonly improvedExplanation: ImprovedExplanation }
   | { readonly status: 'rejected'; readonly reason: string };
 
-/**
- * CONTEXT.md's canonical Review Reason: why a Human Review corrected a
- * Finding or remained inconclusive (missing evidence, blocked access,
- * conflicting evidence) — or, for a diagnosis the supported taxonomy
- * cannot represent, `outside_supported_playbook`. Never
- * free text: qualitative context belongs in a review's optional `note`
- * instead ("optional reviewer notes separated from canonical Finding and
- * Review Reason fields").
- */
+/** Why a review corrected a Finding or stayed inconclusive. Free text goes in `note`. */
 export type ReviewReason =
   | 'missing_evidence'
   | 'blocked_access'
@@ -184,22 +157,10 @@ export type ReviewReason =
   | 'outside_supported_playbook';
 
 /**
- * `POST /investigations/:id/reviews`'s outcome:
- * `confirmed` endorses the automated Finding as-is; `corrected` replaces it
- * with a code from the same supported taxonomy (`FindingCode`) — nothing
- * requires it to differ from the automated one, only that it stays within
- * the taxonomy. An unsupported diagnosis has no `corrected` shape to hold
- * it, so a reviewer with a cause outside the playbook has only
- * `inconclusive` with `outside_supported_playbook` available (enforced
- * by this union, not by cross-field validation); `inconclusive` records
- * that no supported Finding could be confirmed and always carries a
- * canonical `reason`. `automatedFindingCode` is captured from
- * `InvestigationOutcome.findingCode` at the moment this review is
- * appended — not re-read from the Investigation later — so a subsequent
- * intake correction that reruns the playbook can never
- * retroactively change what an already-appended review is understood to
- * have evaluated ("the automated Finding and previous reviews remain
- * immutable").
+ * `corrected` must use a supported `FindingCode`, so a cause outside the
+ * playbook can only be `inconclusive` with `outside_supported_playbook`.
+ * `automatedFindingCode` is captured when the review is appended, so a later
+ * playbook rerun cannot change what the review evaluated.
  */
 export type HumanReview =
   | {
@@ -237,13 +198,8 @@ export interface InvestigationOutcome {
   readonly capabilityFailure?: CapabilityFailure;
   readonly explanation: FindingExplanation;
   /**
-   * The latest accepted or rejected Bedrock-improved-explanation attempt
-   * for *this* outcome. Absent until N2 requests one.
-   * Deliberately not carried forward when a later `intake_updated` event
-   * recomputes `outcome` via `buildInvestigationOutcome` — a prior
-   * improvement was grounded in the Finding/Decision/Ledger this specific
-   * outcome held, and those can change under a re-run playbook, so letting
-   * it survive onto a new outcome would silently misattribute it.
+   * The latest improvement attempt for this outcome. Not carried over when an
+   * intake update recomputes the outcome, because it was grounded in the old one.
    */
   readonly explanationImprovement?: ExplanationImprovementOutcome;
 }
@@ -257,30 +213,16 @@ export interface Investigation {
   readonly outcome?: InvestigationOutcome;
   readonly failureReason?: string;
   /**
-   * The append-only Human Review history, oldest first.
-   * Lives beside `outcome`, never nested inside it: a later `intake_updated`
-   * event replaces `outcome` wholesale when the playbook reruns (the
-   * intake PATCH has no state guard), and reviews must survive that
-   * unchanged — they describe what N2 evaluated at the time, not a
-   * property of whatever outcome happens to be current.
+   * Oldest first. Kept beside `outcome`, not inside it, so reviews survive an
+   * intake update that replaces the outcome.
    */
   readonly reviews: readonly HumanReview[];
 }
 
 /**
  * One record in the append-only Investigation Audit Trail (ADR-0034).
- * `investigation_created` starts an investigation's history;
- * `intake_updated` records a confirmation, completion or correction of
- * intake that resumed (or re-paused) the same Investigation —
- * `PATCH /investigations/:id/intake`. `explanation_improvement_requested`
- * is `POST /investigations/:id/explanations`: it never carries
- * its own `intake`/`state`, because requesting an improved explanation can
- * neither change intake nor move an Investigation out of `completed` — it
- * only ever attaches an `ExplanationImprovementOutcome` to the outcome
- * that was already there. `review_appended` is
- * `POST /investigations/:id/reviews`: it carries only the new `review` —
- * never `intake`/`state`/`outcome` — because appending a Human Review can
- * change none of those.
+ * `explanation_improvement_requested` and `review_appended` carry only their
+ * own payload because they cannot change intake, state or outcome.
  */
 export type InvestigationEvent =
   | {
@@ -315,15 +257,9 @@ export type InvestigationEvent =
     };
 
 /**
- * Folds an Investigation Audit Trail into the Current Investigation
- * projection. Pure and total — the same event array always rebuilds the
- * same projection — so `investigation-repository.ts` never carries a
- * second, independently-mutated source of truth alongside history. This is
- * a real reduce over every event, not a lookup of the first
- * `investigation_created`: a later `intake_updated` must overwrite intake,
- * state, outcome and failure reason, or a correction would silently vanish
- * from `GET /investigations/:id` while `revision` (the count of applied
- * events) kept climbing.
+ * Folds the audit trail into the Current Investigation projection. Pure: the
+ * same events always rebuild the same projection, and `revision` is the
+ * number of events.
  */
 export function foldInvestigationEvents(
   events: readonly InvestigationEvent[],
@@ -372,14 +308,9 @@ export function foldInvestigationEvents(
 }
 
 /**
- * Maps the deterministic Fulfillment Playbook's result to a durable
- * Investigation outcome. A capability `insufficient-evidence` result never
- * reaches `evaluateFindingPolicy` — there is no ledger to evaluate — so
- * this function, not the Finding Policy, owns the one Investigation
- * Decision branch ADR-0037 requires but `finding-policy.ts`'s pure ledger
- * evaluation has no ledger to derive: "capability permission/failure is an
- * auditable `completed` outcome with `requires_specialist_review`, not a
- * technical `failed` state."
+ * A capability failure leaves no ledger for the Finding Policy to evaluate, so
+ * it is mapped here to a completed outcome with `requires_specialist_review`,
+ * not a `failed` state (ADR-0037).
  */
 export function buildInvestigationOutcome(
   playbookResult: FulfillmentPlaybookResult,
