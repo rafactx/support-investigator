@@ -2,7 +2,12 @@ import { createHash, randomUUID } from 'node:crypto';
 import { type Context, Hono } from 'hono';
 import { z } from 'zod';
 import type { CapabilityName } from '../capabilities/types.ts';
-import type { InvestigationRepository } from '../domain/investigation-repository.ts';
+import type {
+  AppendReviewResult,
+  InvestigationRepository,
+  RequestExplanationImprovementResult,
+  UpdateIntakeResult,
+} from '../domain/investigation-repository.ts';
 import {
   buildInvestigationOutcome,
   evaluateIntakeReadiness,
@@ -504,11 +509,7 @@ function staleRevision(c: Context, expectedRevision: number, currentRevision: nu
   );
 }
 
-type CommitResult =
-  | { readonly kind: 'updated' | 'recorded' | 'appended' | 'idempotent-replay'; readonly investigation: Investigation }
-  | { readonly kind: 'idempotency-conflict' }
-  | { readonly kind: 'stale-revision'; readonly currentRevision: number }
-  | { readonly kind: 'not-found' };
+type CommitResult = UpdateIntakeResult | RequestExplanationImprovementResult | AppendReviewResult;
 
 function commitResponse(c: Context, result: CommitResult, expectedRevision: number): Response {
   switch (result.kind) {
@@ -518,8 +519,14 @@ function commitResponse(c: Context, result: CommitResult, expectedRevision: numb
       return c.json(errorBody(IDEMPOTENCY_CONFLICT), 409);
     case 'stale-revision':
       return staleRevision(c, expectedRevision, result.currentRevision);
-    default:
+    case 'updated':
+    case 'recorded':
+    case 'appended':
+    case 'idempotent-replay':
       return c.json(toInvestigationResponse(result.investigation), 200);
+    default:
+      // A new result kind fails the build here instead of returning 200.
+      return result satisfies never;
   }
 }
 
