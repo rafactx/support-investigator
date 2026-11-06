@@ -157,7 +157,7 @@ One way the platform can deliver a SKU to a destination, as `simulate_fulfillmen
 _Avoid_: SLA (ambiguous with service-level agreement)
 
 **NO_DELIVERY_OPTIONS**:
-A `simulate_fulfillment` message meaning the SKU has stock (`availableQuantity > 0`) but zero `deliveryOptions[]` for the given seller/postal code — the flagship demo case named in `ADR-0006` ("the SKU has stock but no delivery option shows up"). Distinct from an out-of-stock SKU (`availableQuantity: 0`), which is a different, unrelated failure mode and does not produce this message.
+A `simulate_fulfillment` message meaning the SKU has stock (`availableQuantity > 0`) but zero `deliveryOptions[]` for the given seller/postal code. This is the reference scenario. An out-of-stock SKU (`availableQuantity: 0`) is a different failure mode and does not produce it.
 
 **Knowledge Index**:
 The versioned documentary search artifact built from the Curated doc set. It supports exploratory retrieval and optional language assistance, but never creates Ledger Facts, satisfies Evidence Contracts or selects the normative Finding Source Pack.
@@ -165,7 +165,3 @@ _Avoid_: Evidence Ledger, Finding Source Pack, source of case evidence
 
 **Curated doc set**:
 The fixed, reviewable collection of original support runbooks (`src/kb/articles/`) from which documentary artifacts are built. Inclusion is an explicit project decision rather than whatever a live search ranks first.
-
-**Eval report** _(retired)_:
-Historical term for the on-disk artifact the old golden-ticket harness wrote for the generic, model-driven `/investigate` contract. That harness, the route it measured and the reports were removed (`docs/adr/0046`): the Fulfillment Playbook's determinism is proven by ordinary Public Reference Scenario tests (`pnpm test`), and model behavior at the intake boundary by `pnpm evals:intake`.
-_Avoid_: using this term for anything current — the artifact no longer exists
