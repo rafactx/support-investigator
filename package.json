@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --experimental-strip-types src/cli.ts",
     "build:web": "pnpm --filter web build",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.workers.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.workers.json && pnpm --filter web typecheck",
     "lint": "biome lint .",
     "test": "vitest run",
     "evals:intake": "node --env-file-if-exists=.env --experimental-strip-types src/evals/run-intake-evals.ts",
