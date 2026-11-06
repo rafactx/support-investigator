@@ -1,0 +1,36 @@
+name: Bug report
+description: Something in the API, the Support MCP, the SPA or the Worker does not behave as documented.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Investigations API
+        - Support MCP
+        - SPA
+        - Cloudflare Worker (live demo)
+        - AWS CDK stack
+        - Tests or CI
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The request, command or ticket text you used. Do not paste real customer data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual result
+      description: For an investigation, include the Finding Code and Investigation Decision you got.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or environment
+      description: Commit SHA, or "live demo".

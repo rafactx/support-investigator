@@ -156,6 +156,10 @@ All fixtures, identifiers and payload shapes are synthetic. This is an independe
 - [`docs/adr/`](./docs/adr/): every architecture decision, in order.
 - [`docs/demo-script.md`](./docs/demo-script.md): the three-minute scripted demo.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, the checks CI runs and the pull request flow. Report vulnerabilities as described in [SECURITY.md](./SECURITY.md).
+
 ## License
 
 [MIT](./LICENSE)

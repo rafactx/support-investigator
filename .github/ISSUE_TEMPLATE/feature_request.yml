@@ -1,0 +1,18 @@
+name: Feature request
+description: Propose a change to the investigation flow, a capability, the MCP surface or the tooling.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What a support engineer cannot do today, or what is harder than it should be.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: If it changes a decision recorded in docs/adr/, name the ADR.
+    validations:
+      required: true
