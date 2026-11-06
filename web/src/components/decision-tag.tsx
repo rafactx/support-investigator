@@ -13,15 +13,7 @@ interface DecisionMeta {
   icon: ReactElement;
 }
 
-/**
- * ADR-0037's Investigation Decision vocabulary —
- * `ready_for_human_resolution` / `needs_input` / `requires_specialist_review`
- * — never the retired `resolved` / `needs_more_data` / `needs_human`
- * `Status` values the old `/investigate` prototype used before it was
- * removed. ADR-0037 replaced Status with Investigation Decision
- * specifically to prevent that vocabulary from collapsing back together.
- * Each tone pairs with its own icon shape (A11Y-028).
- */
+/** Investigation Decision values (ADR-0037). Each tone has its own icon so color is not the only cue. */
 const DECISION_META: Record<InvestigationDecisionValue, DecisionMeta> = {
   ready_for_human_resolution: {
     label: 'Ready for human resolution',
