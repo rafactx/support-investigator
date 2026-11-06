@@ -2,7 +2,7 @@
 
 One Worker serves the Investigations API, the Support MCP and the SPA on one origin ([ADR-0048](./adr/0048-cloudflare-workers-is-the-live-demo-target-with-workers-ai.md)). Everything in this runbook runs from the repository root. Nothing here is needed for local development or CI.
 
-You need a Cloudflare account (the Workers Free plan is enough), Node.js 22+ and pnpm.
+You need a Cloudflare account (the Workers Free plan is enough), Node.js 22.9+ and pnpm.
 
 ## 1. Check the bundle locally
 

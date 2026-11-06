@@ -2,7 +2,7 @@
 
 ## Setup
 
-Requires Node.js 22+ and pnpm (the version is pinned in the `packageManager` field of `package.json`).
+Requires Node.js 22.9+ (`engines` in `package.json`) and pnpm (the version is pinned in the `packageManager` field).
 
 ```bash
 pnpm install

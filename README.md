@@ -88,7 +88,7 @@ A rewritten explanation is accepted only if a structural grounding check passes:
 
 ## Quickstart
 
-Requires Node.js 22+ and pnpm.
+Requires Node.js 22.9+ and pnpm.
 
 ```bash
 pnpm install && pnpm dev
