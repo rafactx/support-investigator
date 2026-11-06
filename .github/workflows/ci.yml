@@ -1,9 +1,6 @@
 name: CI
 
-# Runs the same commands a contributor runs locally (see CONTRIBUTING.md).
-# The `ci` job is the required check for pull requests into main.
-# Live-model evals (`pnpm evals:intake:live`) never run here (ADR-0017),
-# and nothing in this workflow deploys.
+# The same commands CONTRIBUTING.md lists. No live-model evals, no deploys (ADR-0017).
 on:
   push:
     branches: [main]
