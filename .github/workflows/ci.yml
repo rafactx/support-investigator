@@ -1,6 +1,6 @@
 name: CI
 
-# The same commands CONTRIBUTING.md lists. No live-model evals, no deploys (ADR-0017).
+# The same commands CONTRIBUTING.md lists. No live-model evals, no deploys (ADR-0017, ADR-0049).
 on:
   push:
     branches: [main]
@@ -9,20 +9,22 @@ on:
 permissions:
   contents: read
 
+# Superseded pull request runs are cancelled; every run on main finishes.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   ci:
     name: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
@@ -36,7 +38,7 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      # The CDK stack tests and `cdk synth` stage web/dist as an asset.
+      # The CDK stack tests, `cdk synth` and the Worker bundle all read web/dist.
       - name: Build SPA
         run: pnpm build:web
 
