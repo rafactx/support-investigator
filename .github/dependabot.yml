@@ -1,9 +1,8 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directories:
-      - /
-      - /web
+    # One root entry covers the whole pnpm workspace, including web/.
+    directory: /
     schedule:
       interval: weekly
     groups:
