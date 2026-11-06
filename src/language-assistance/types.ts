@@ -1,10 +1,4 @@
-/**
- * The non-Account-Scope fields Language Assistance may propose from
- * unstructured ticket text. `accountId` is intentionally
- * absent from this union — nothing that consumes it can ask an
- * `IntakeExtractionRequest` to extract Account Scope, and the Bedrock
- * implementation's schema has no key for it either.
- */
+/** The fields Language Assistance may propose. Account Scope is absent, so it cannot be requested. */
 export type ExtractableIntakeField = 'skuId' | 'seller' | 'quantity' | 'destinationPostalCode';
 
 export interface ExtractedIntakeFields {
@@ -25,21 +19,13 @@ export type IntakeExtractionResult =
   | { readonly kind: 'unavailable'; readonly reason: string };
 
 /**
- * `LanguageAssistance.improveExplanation`'s request:
- * everything the model is allowed to know about one completed
- * Investigation's deterministic Finding Source Pack explanation, to
- * improve wording and next-action guidance on. Deliberately domain-agnostic
- * plain strings — this module has no import from `domain/` (ADR-0042) — so
- * `domain/explanation-improvement.ts` is the one seam that translates
- * `FindingCode`/`InvestigationDecision`/`DecisionReason` into these fields.
+ * Everything the model may know when improving one explanation. Plain strings,
+ * because this module does not import `domain/` (ADR-0042).
  *
- * `allowedPlaceholderNames` carries only placeholder *names*
- * (`"skuId"`, `"destinationPostalCode"`, …), never their real values: the
- * model must reference a specific fact as `{{skuId}}` in `summaryTemplate`,
- * not retype or invent one, because it never receives the literal value to
- * retype in the first place. `deterministicSummary` is the existing
- * template-based prose (`buildFindingExplanation`), itself already free of
- * any case-specific identifier, given only as tone and content reference.
+ * `allowedPlaceholderNames` carries names only, never values: the model refers
+ * to a fact as `{{skuId}}` and cannot retype an identifier it never received.
+ * `deterministicSummary` is the template text, which has no case-specific
+ * identifiers.
  */
 export interface ExplanationImprovementRequest {
   readonly findingCode: string;
