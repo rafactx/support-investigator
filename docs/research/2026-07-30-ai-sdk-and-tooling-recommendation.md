@@ -147,7 +147,7 @@ The first-party Fulfillment Investigator does not need to route its own calls th
 6. Establish the OpenTelemetry trace vocabulary and privacy allowlist before exporting model inputs or outputs.
 7. Remove superseded packages and the internal MCP hop only after contract, integration, and golden-ticket tests pass.
 
-## Staff-level decision test
+## Dependency adoption test
 
 A proposed dependency must answer all four questions:
 

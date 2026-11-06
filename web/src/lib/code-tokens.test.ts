@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type CodeToken, tokenizeCodeSpans } from './code-tokens.ts';
 
 // Independent source of truth for every expectation below: real fixture
-// observations (`spike/`, `src/gateway/fixtures`) and the inline-code
+// observations (`src/gateway/fixtures`) and the inline-code
 // contract: only order/SKU ids, postal codes, ISO timestamps, and
 // key=value pairs become code; prose and bare numbers never do.
 
