@@ -32,13 +32,8 @@ export type CreateInvestigationResult =
   | { readonly kind: 'idempotency-conflict' };
 
 /**
- * `PATCH /investigations/:id/intake`'s write command:
- * confirms, completes or corrects intake and, when the merged intake is
- * ready, resumes the same Investigation with a freshly-computed outcome.
- * `expectedRevision` is optimistic concurrency against the target
- * investigation's current `events.length` — distinct from the idempotency
- * check, which detects a *retry* rather than a *conflicting concurrent
- * edit*.
+ * `PATCH /investigations/:id/intake`. `expectedRevision` guards against a
+ * concurrent edit; the idempotency key guards against a retry.
  */
 export interface UpdateIntakeCommand {
   readonly investigationId: string;
@@ -59,14 +54,7 @@ export type UpdateIntakeResult =
   | { readonly kind: 'stale-revision'; readonly currentRevision: number }
   | { readonly kind: 'not-found' };
 
-/**
- * `POST /investigations/:id/explanations`'s write command: records
- * exactly one accepted-or-rejected `ExplanationImprovementOutcome` against an already-`completed`
- * Investigation. Unlike `UpdateIntakeCommand`, this never carries `intake`
- * or `state` — the caller (`investigations-app.ts`) already verified
- * `state === 'completed'` before ever calling `languageAssistance`, and
- * this command cannot change either field.
- */
+/** `POST /investigations/:id/explanations`. Cannot change intake or state. */
 export interface RequestExplanationImprovementCommand {
   readonly investigationId: string;
   readonly idempotencyKey: string;
@@ -83,13 +71,7 @@ export type RequestExplanationImprovementResult =
   | { readonly kind: 'stale-revision'; readonly currentRevision: number }
   | { readonly kind: 'not-found' };
 
-/**
- * `POST /investigations/:id/reviews`'s write command: appends
- * exactly one Human Review to an already-`completed` Investigation. Like `RequestExplanationImprovementCommand`, this never
- * carries `intake`, `state` or `outcome` — appending a review changes none
- * of those (the automated Finding and earlier reviews stay
- * immutable).
- */
+/** `POST /investigations/:id/reviews`. Cannot change intake, state or outcome. */
 export interface AppendReviewCommand {
   readonly investigationId: string;
   readonly idempotencyKey: string;
@@ -107,20 +89,13 @@ export type AppendReviewResult =
   | { readonly kind: 'not-found' };
 
 /**
- * The append-only Investigation Audit Trail port (ADR-0034/0035): accepted
- * intake, Ledger Facts and policy decisions form history, and the Current
- * Investigation is a projection over that history, never a second
- * independently-mutated record. `findByIdempotencyKey` is a read-only
- * pre-check callers use *before* running the Fulfillment Playbook, so an
- * exact retry never re-invokes Operational Capabilities; `create`
- * performs the same check again atomically at commit time as the
- * authoritative guard.
+ * The append-only Investigation Audit Trail port (ADR-0034/0035). The Current
+ * Investigation is a projection over the events, never a separately mutated
+ * record. `findByIdempotencyKey` is a read-only pre-check so an exact retry
+ * never re-runs capabilities; each write repeats the check atomically.
  *
- * This module holds the in-memory implementation used for local tests
- * (ADR-0036). The DynamoDB-backed implementation satisfying this same port
- * lives in `src/persistence/dynamodb-investigation-repository.ts`; both
- * register the same behavioral contract
- * (`investigation-repository.contract.ts`).
+ * The in-memory, D1 and DynamoDB implementations all pass
+ * `investigation-repository.contract.ts`.
  */
 export interface InvestigationRepository {
   findByIdempotencyKey(idempotencyKey: string, requestFingerprint: string): Promise<IdempotencyLookup>;
@@ -156,13 +131,9 @@ function lookup(
 }
 
 /**
- * The local-test / demo implementation of `InvestigationRepository`
- * (ADR-0036: "an in-memory repository implements the same port only for
- * local tests"). Every method body here runs synchronously to completion
- * before its first (and only) `await` boundary in a caller — there is no
- * `await` inside `createInvestigation` itself — so two calls racing from
- * concurrent request handlers can never interleave the idempotency-key
- * check with its own reservation.
+ * In-memory implementation for tests and local runs. Each method runs
+ * synchronously, so concurrent handlers cannot interleave the idempotency
+ * check with the write.
  */
 export function createInMemoryInvestigationRepository(): InvestigationRepository {
   const eventsById = new Map<string, InvestigationEvent[]>();
