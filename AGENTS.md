@@ -8,7 +8,7 @@ Use `pnpm` (pinned in `package.json`). Before proposing a change as done, run th
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm typecheck && pnpm lint && pnpm build:web && pnpm test && pnpm evals:intake && pnpm cdk synth
+pnpm typecheck && pnpm lint && pnpm build:web && pnpm test && pnpm evals:intake && pnpm cdk synth && pnpm cf:check
 ```
 
 Tests are deterministic and make no network or model calls. Keep it that way: inject fakes at the existing seams (`CommerceGateway`, `InvestigationRepository`, `LanguageAssistance`, `EmbedProvider`, `RateLimiter`).

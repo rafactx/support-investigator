@@ -4,7 +4,7 @@ Release evidence is intentionally split between a frozen, credential-free gate a
 
 ## Frozen gate
 
-The CI workflow runs, in order, `pnpm install --frozen-lockfile`, typechecking, linting, SPA build, the full unit/integration suite, deterministic intake-extraction evaluation, and CDK synthesis. The suite includes infrastructure assertions, the focused Public Reference Scenarios, the Finding Policy truth table, durability contracts, model-boundary sabotage regression, and MCP v2 adapter contracts.
+The CI workflow runs, in order, `pnpm install --frozen-lockfile`, typechecking, linting, SPA build, the full unit/integration suite, deterministic intake-extraction evaluation, CDK synthesis, and a dry-run build of the Cloudflare Worker bundle. The suite includes infrastructure assertions, the focused Public Reference Scenarios, the Finding Policy truth table, durability contracts, model-boundary sabotage regression, and MCP v2 adapter contracts.
 
 `pnpm evals:intake` reports per-field precision/recall, false positives and invented-identifier rate against 30 labeled synthetic PT/EN tickets. Those are extraction-quality measurements only. It does not claim production diagnostic accuracy. `ROOT_CAUSE_UNDETERMINED` and `outside_supported_playbook` remain visible in the focused decision/review tests and smoke report as evidence of explicit uncertainty and taxonomy boundaries, not accuracy scores.
 

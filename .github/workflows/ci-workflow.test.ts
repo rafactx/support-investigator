@@ -26,6 +26,7 @@ interface WorkflowStep {
 }
 
 interface WorkflowJob {
+  name?: string;
   steps: WorkflowStep[];
 }
 
@@ -67,7 +68,7 @@ function pnpmScriptsInvoked(steps: WorkflowStep[]): string[] {
 describe('CI workflow', () => {
   const ci = loadWorkflow('ci.yml');
 
-  it('runs on pull_request, and the gate job runs typecheck, lint, unit tests, pnpm evals:intake, and cdk synth', () => {
+  it('runs on pull_request, and the gate job runs typecheck, lint, unit tests, pnpm evals:intake, cdk synth and the Worker bundle check', () => {
     expect(onKeys(ci)).toContain('pull_request');
 
     const runCommands = allSteps(ci)
@@ -80,6 +81,7 @@ describe('CI workflow', () => {
     expect(runCommands).toMatch(/pnpm (run )?test/);
     expect(runCommands).toMatch(/pnpm evals:intake(?!:live)/); // "pnpm evals:intake", not "pnpm evals:intake:live"
     expect(runCommands).toMatch(/pnpm cdk synth/);
+    expect(runCommands).toMatch(/pnpm cf:check/);
     // The old `/investigate`-route golden-ticket harness is gone
     // entirely — "pnpm evals" (without a `:intake` suffix) must not appear.
     expect(runCommands).not.toMatch(/pnpm evals(?!:)/);
@@ -95,6 +97,11 @@ describe('CI workflow', () => {
     expect(runCommands).not.toMatch(/evals:intake:live/);
   });
 
+  it('has a single job with a stable id and name, so it can be a required check', () => {
+    expect(Object.keys(ci.jobs)).toEqual(['ci']);
+    expect(ci.jobs.ci?.name).toBe('ci');
+  });
+
   it('the gate workflow never deploys and triggers on nothing but push/pull_request', () => {
     // No step anywhere in this workflow runs `cdk deploy` — deploy stays the
     // CLI path ADR-0002 already decided (dedicated IAM user, not this
@@ -104,6 +111,7 @@ describe('CI workflow', () => {
       .filter((run): run is string => Boolean(run))
       .join('\n');
     expect(ciRunCommands).not.toMatch(/cdk deploy/);
+    expect(ciRunCommands).not.toMatch(/pnpm cf:deploy|wrangler deploy(?! --dry-run)/);
 
     // The stronger half: `on` is a subset of {push, pull_request} — no
     // `workflow_dispatch`, `schedule`, or `workflow_run` trigger could ever
