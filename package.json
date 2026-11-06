@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "5.0.36",
-    "@ai-sdk/provider": "4.0.4",
     "@aws-sdk/client-bedrock-runtime": "3.1095.0",
     "@aws-sdk/client-dynamodb": "3.1095.0",
     "@aws-sdk/client-ssm": "3.1095.0",
