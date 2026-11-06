@@ -31,13 +31,13 @@ aws ssm get-parameter \
 
 ## Tear down
 
-1. **Destroy the CloudFormation stack** (removes both application Lambdas, the demo-key authorizer Lambda, the HTTP API, the DynamoDB Investigation table, and their IAM roles/policies — everything CDK created):
+1. **Destroy the CloudFormation stack.** This removes the two application Lambdas, the demo-key authorizer, the HTTP API, the CloudFront distribution, the DynamoDB Investigation table and their IAM roles:
 
    ```bash
    pnpm cdk destroy
    ```
 
-   Confirm when prompted (`y`). This does **not** run `cdk bootstrap`'s own `CDKToolkit` stack, and does not need to — the bootstrap stack is a one-time, account-wide resource this project doesn't own and has no reason to remove.
+   Confirm when prompted (`y`). The account-wide `CDKToolkit` bootstrap stack is not touched.
 
 2. **Verify nothing is left reachable**:
 
@@ -57,10 +57,11 @@ aws ssm get-parameter \
 
 ## What this does *not* remove
 
+- The SPA S3 bucket, which CDK retains by default. Empty and delete it with `aws s3 rb s3://<bucket-name> --force` if you want it gone.
 - The CDK bootstrap stack (`CDKToolkit`) and its S3/ECR bootstrap resources — shared, account-wide, out of this project's scope to manage.
 - The IAM user `support-investigator-deploy` and the `deploy-admins` group — created outside CDK, not part of this stack.
 - Bedrock model access / inference profile grants for the account — these are account-level Bedrock console settings, not stack resources.
 
 ## Cost note
 
-While the stack is up, cost is effectively zero outside active demo usage: both application Lambdas and the authorizer are pay-per-invocation, the HTTP API has no fixed monthly charge, and no NAT gateway, RDS instance, or other always-on billed resource exists anywhere in `support-investigator-stack.ts`. The only reason to run this runbook is the security posture (ADR-0002: the public demo endpoint doesn't stay up outside the demo window), not cost avoidance — but it costs nothing to be conservative here either.
+While the stack is up, cost is effectively zero outside active demo usage: both application Lambdas and the authorizer are pay-per-invocation, the HTTP API has no fixed monthly charge, and no NAT gateway, RDS instance, or other always-on billed resource exists anywhere in `support-investigator-stack.ts`. The reason to run this runbook is security (ADR-0002: the public endpoint does not stay up outside the demo window), not cost.
