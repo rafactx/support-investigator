@@ -28,8 +28,8 @@
     {
       "binding": "DB",
       "database_name": "support-investigator",
-      // PLACEHOLDER: replace with the id that `wrangler d1 create
-      // support-investigator` prints. Local dev (`pnpm cf:dev`) ignores it.
+      // The live demo's database. To deploy your own, replace it with the id
+      // `wrangler d1 create support-investigator` prints. `pnpm cf:dev` ignores it.
       "database_id": "76654fd2-b238-4b4e-8e3a-856414c208e3",
       "migrations_dir": "migrations"
     }

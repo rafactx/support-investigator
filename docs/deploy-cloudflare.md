@@ -20,7 +20,7 @@ pnpm exec wrangler login
 pnpm exec wrangler d1 create support-investigator
 ```
 
-Copy the `database_id` it prints into `wrangler.jsonc`, replacing the placeholder `00000000-0000-0000-0000-000000000000`. Then apply the migrations to the remote database:
+Copy the `database_id` it prints into `wrangler.jsonc`, replacing the live demo's id. Then apply the migrations to the remote database:
 
 ```bash
 pnpm cf:migrate      # wrangler d1 migrations apply support-investigator --remote
